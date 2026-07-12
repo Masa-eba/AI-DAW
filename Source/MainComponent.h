@@ -67,6 +67,7 @@ private:
     void quantizeSelectedMidiClip();
     void transposeSelectedMidiClip(int semitones);
     void adjustSelectedMidiClipVelocity(float delta);
+    void humanizeSelectedMidiClipVelocity();
     void generateAiChordsForSelectedTrack();
     void exportMix();
     void saveProject();

@@ -1027,6 +1027,45 @@ bool AudioEngine::adjustMidiClipVelocity(const TrackId& trackId, const juce::Uui
     return false;
 }
 
+bool AudioEngine::humanizeMidiClipVelocity(const TrackId& trackId,
+                                           const juce::Uuid& clipId,
+                                           float amount)
+{
+    if (! std::isfinite(amount) || amount <= 0.0f)
+        return false;
+
+    std::scoped_lock lock(modelMutex);
+    saveUndoSnapshotNoLock();
+
+    if (auto* track = projectModel.findMidiTrack(trackId))
+        for (auto& clip : track->clips)
+            if (clip.id == clipId)
+            {
+                auto changed = false;
+                auto& random = juce::Random::getSystemRandom();
+                const auto safeAmount = juce::jlimit(0.0f, 0.5f, amount);
+
+                for (auto i = 0; i < clip.sequence.getNumEvents(); ++i)
+                {
+                    auto* event = clip.sequence.getEventPointer(i);
+
+                    if (event == nullptr || ! event->message.isNoteOn())
+                        continue;
+
+                    const auto offset = random.nextFloat() * safeAmount * 2.0f - safeAmount;
+                    const auto velocity = juce::jlimit(0.01f,
+                                                       1.0f,
+                                                       event->message.getFloatVelocity() + offset);
+                    event->message.setVelocity(velocity);
+                    changed = true;
+                }
+
+                return changed;
+            }
+
+    return false;
+}
+
 bool AudioEngine::toggleMidiClipMuted(const TrackId& trackId, const juce::Uuid& clipId)
 {
     std::scoped_lock lock(modelMutex);

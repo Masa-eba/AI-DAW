@@ -598,6 +598,14 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
         return true;
     }
 
+    if (key.getModifiers().isCommandDown()
+        && key.getModifiers().isShiftDown()
+        && key.getKeyCode() == 'h')
+    {
+        humanizeSelectedMidiClipVelocity();
+        return true;
+    }
+
     if (key.getModifiers().isCommandDown() && key.getKeyCode() == juce::KeyPress::upKey)
     {
         transposeSelectedMidiClip(12);
@@ -1563,6 +1571,25 @@ void MainComponent::adjustSelectedMidiClipVelocity(float delta)
     if (! audioEngine.adjustMidiClipVelocity(selectedMidiClip->first, selectedMidiClip->second, delta))
     {
         showErrorMessage("Velocity edit failed", "The selected MIDI clip velocity could not be changed.");
+        return;
+    }
+
+    timelineComponent.repaint();
+}
+
+void MainComponent::humanizeSelectedMidiClipVelocity()
+{
+    const auto selectedMidiClip = timelineComponent.getSelectedMidiClip();
+
+    if (! selectedMidiClip.has_value())
+    {
+        showErrorMessage("No MIDI clip selected", "Select a MIDI clip before humanizing.");
+        return;
+    }
+
+    if (! audioEngine.humanizeMidiClipVelocity(selectedMidiClip->first, selectedMidiClip->second, 0.08f))
+    {
+        showErrorMessage("Humanize failed", "The selected MIDI clip velocity could not be humanized.");
         return;
     }
 

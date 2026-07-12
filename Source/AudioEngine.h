@@ -109,6 +109,7 @@ public:
     bool quantizeMidiClip(const TrackId& trackId, const juce::Uuid& clipId, double gridBeats);
     bool transposeMidiClip(const TrackId& trackId, const juce::Uuid& clipId, int semitones);
     bool adjustMidiClipVelocity(const TrackId& trackId, const juce::Uuid& clipId, float delta);
+    bool humanizeMidiClipVelocity(const TrackId& trackId, const juce::Uuid& clipId, float amount);
     bool toggleMidiClipMuted(const TrackId& trackId, const juce::Uuid& clipId);
     bool generateChordProgression(const TrackId& trackId, const juce::String& style);
 
