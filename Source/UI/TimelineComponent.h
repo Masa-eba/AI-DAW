@@ -75,6 +75,9 @@ private:
                                const AudioTrack& track,
                                const AudioClip& clip,
                                juce::Rectangle<float> clipBounds) const;
+    void drawMidiClipNotes(juce::Graphics& graphics,
+                           const MidiClip& clip,
+                           juce::Rectangle<float> clipBounds) const;
     static bool isSupportedAudioFile(const juce::File& file);
     float secondsToX(double seconds) const;
     double xToSeconds(float x) const;

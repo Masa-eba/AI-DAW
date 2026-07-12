@@ -1,6 +1,7 @@
 #include "TimelineComponent.h"
 
 #include <cmath>
+#include <vector>
 
 namespace
 {
@@ -264,18 +265,18 @@ void TimelineComponent::paint(juce::Graphics& graphics)
                 graphics.setColour(clip.muted
                                         ? juce::Colour(0xff51565c)
                                         : (isSelected ? juce::Colour(0xff9b78f0) : juce::Colour(0xff7b5cc7)));
-                graphics.fillRoundedRectangle(static_cast<float>(labelWidth) + static_cast<float>(start * pixelsPerSecond),
-                                              static_cast<float>(y + 14),
-                                              static_cast<float>(juce::jmax(24, static_cast<int>(length * pixelsPerSecond))),
-                                              36.0f,
-                                              4.0f);
+                const auto clipBounds = juce::Rectangle<float>(
+                    static_cast<float>(labelWidth) + static_cast<float>(start * pixelsPerSecond),
+                    static_cast<float>(y + 14),
+                    static_cast<float>(juce::jmax(24, static_cast<int>(length * pixelsPerSecond))),
+                    36.0f);
+                graphics.fillRoundedRectangle(clipBounds, 4.0f);
+                drawMidiClipNotes(graphics, clip, clipBounds);
+
                 if (isSelected)
                 {
                     graphics.setColour(juce::Colour(0xffffc857));
-                    graphics.drawRoundedRectangle(static_cast<float>(labelWidth) + static_cast<float>(start * pixelsPerSecond),
-                                                  static_cast<float>(y + 14),
-                                                  static_cast<float>(juce::jmax(24, static_cast<int>(length * pixelsPerSecond))),
-                                                  36.0f,
+                    graphics.drawRoundedRectangle(clipBounds,
                                                   4.0f,
                                                   2.0f);
                 }
@@ -864,6 +865,79 @@ void TimelineComponent::drawAudioClipWaveform(juce::Graphics& graphics,
         const auto gain = juce::jlimit(0.0f, 2.0f, clip.gain);
         const auto height = juce::jlimit(1.0f, maxHeight, peak * gain * maxHeight);
         graphics.drawVerticalLine(pixel, centreY - height, centreY + height);
+    }
+}
+
+void TimelineComponent::drawMidiClipNotes(juce::Graphics& graphics,
+                                          const MidiClip& clip,
+                                          juce::Rectangle<float> clipBounds) const
+{
+    struct NotePreview
+    {
+        int note = 60;
+        double startBeat = 0.0;
+        double endBeat = 0.0;
+    };
+
+    std::vector<NotePreview> notes;
+    notes.reserve(static_cast<size_t>(clip.sequence.getNumEvents()));
+
+    for (auto i = 0; i < clip.sequence.getNumEvents(); ++i)
+    {
+        const auto* event = clip.sequence.getEventPointer(i);
+
+        if (event == nullptr || ! event->message.isNoteOn())
+            continue;
+
+        const auto noteNumber = event->message.getNoteNumber();
+        const auto startBeat = event->message.getTimeStamp();
+        auto endBeat = clip.lengthBeats;
+
+        for (auto next = i + 1; next < clip.sequence.getNumEvents(); ++next)
+        {
+            const auto* nextEvent = clip.sequence.getEventPointer(next);
+
+            if (nextEvent == nullptr)
+                continue;
+
+            const auto& message = nextEvent->message;
+
+            if (message.getNoteNumber() == noteNumber && message.isNoteOff())
+            {
+                endBeat = message.getTimeStamp();
+                break;
+            }
+        }
+
+        if (startBeat < clip.lengthBeats)
+            notes.push_back({ noteNumber, startBeat, juce::jlimit(startBeat + 0.05, clip.lengthBeats, endBeat) });
+    }
+
+    if (notes.empty() || clip.lengthBeats <= 0.0)
+        return;
+
+    auto lowest = notes.front().note;
+    auto highest = notes.front().note;
+
+    for (const auto& note : notes)
+    {
+        lowest = juce::jmin(lowest, note.note);
+        highest = juce::jmax(highest, note.note);
+    }
+
+    const auto noteRange = juce::jmax(1, highest - lowest);
+    const auto noteArea = clipBounds.reduced(5.0f, 6.0f);
+    graphics.setColour(clip.muted ? juce::Colour(0x889ca3ad) : juce::Colour(0xeef6f0ff));
+
+    for (const auto& note : notes)
+    {
+        const auto x = noteArea.getX()
+                     + static_cast<float>((note.startBeat / clip.lengthBeats) * noteArea.getWidth());
+        const auto right = noteArea.getX()
+                         + static_cast<float>((note.endBeat / clip.lengthBeats) * noteArea.getWidth());
+        const auto normalizedPitch = static_cast<float>(note.note - lowest) / static_cast<float>(noteRange);
+        const auto y = noteArea.getBottom() - normalizedPitch * noteArea.getHeight();
+        graphics.drawLine(x, y, juce::jmax(x + 2.0f, right), y, 2.0f);
     }
 }
 
