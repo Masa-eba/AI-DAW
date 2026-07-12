@@ -182,6 +182,9 @@ open build/MiniDAW_artefacts/AI-DAW.app
 - `Home`: 再生位置を先頭へ移動
 - `End`: 再生位置をプロジェクト末尾へ移動
 - `Esc`: Panic / All Notes Off
+- `Command + N`: 新規プロジェクト
+- `Command + O`: プロジェクトを開く
+- `Command + S`: プロジェクトを保存
 - `Command + Z`: Undo
 - `Command + Shift + Z`: Redo
 - `Command + Shift + A`: 全トラックのRecord Armを解除

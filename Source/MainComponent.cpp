@@ -567,6 +567,33 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
         return true;
     }
 
+    if (key.getModifiers().isCommandDown()
+        && ! key.getModifiers().isShiftDown()
+        && ! key.getModifiers().isAltDown()
+        && key.getKeyCode() == 'n')
+    {
+        newProject();
+        return true;
+    }
+
+    if (key.getModifiers().isCommandDown()
+        && ! key.getModifiers().isShiftDown()
+        && ! key.getModifiers().isAltDown()
+        && key.getKeyCode() == 'o')
+    {
+        openProject();
+        return true;
+    }
+
+    if (key.getModifiers().isCommandDown()
+        && ! key.getModifiers().isShiftDown()
+        && ! key.getModifiers().isAltDown()
+        && key.getKeyCode() == 's')
+    {
+        saveProject();
+        return true;
+    }
+
     if (key.getKeyCode() == juce::KeyPress::escapeKey)
     {
         panicAllNotes();
