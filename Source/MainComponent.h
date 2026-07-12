@@ -8,6 +8,7 @@
 
 #include <map>
 #include <set>
+#include <vector>
 
 class MainComponent final : public juce::Component,
                             private juce::Timer
@@ -61,6 +62,7 @@ private:
     void fitProjectToView();
     void adjustMetronomeGain(float delta);
     void resetMasterVolume();
+    void tapTempo();
     void cycleSnapGrid(int direction);
     void updateSnapButtonText();
     void addMarkerAtPlayhead();
@@ -183,6 +185,7 @@ private:
     juce::File currentProjectFile;
     juce::Array<juce::MidiDeviceInfo> midiDevices;
     std::set<int> activeComputerKeyboardNotes;
+    std::vector<double> tapTempoTimes;
     int snapGridIndex = 2;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MainComponent)

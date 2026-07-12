@@ -1103,6 +1103,12 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
         return true;
     }
 
+    if (key.getModifiers().isAltDown() && key.getKeyCode() == 't')
+    {
+        tapTempo();
+        return true;
+    }
+
     if (key.getModifiers().isAltDown() && key.getKeyCode() == '=')
     {
         adjustMetronomeGain(0.1f);
@@ -1469,6 +1475,43 @@ void MainComponent::adjustMetronomeGain(float delta)
 void MainComponent::resetMasterVolume()
 {
     masterVolumeSlider.setValue(0.8, juce::sendNotificationSync);
+}
+
+void MainComponent::tapTempo()
+{
+    const auto now = juce::Time::getMillisecondCounterHiRes() / 1000.0;
+
+    if (! tapTempoTimes.empty() && now - tapTempoTimes.back() > 2.0)
+        tapTempoTimes.clear();
+
+    tapTempoTimes.push_back(now);
+
+    while (tapTempoTimes.size() > 5)
+        tapTempoTimes.erase(tapTempoTimes.begin());
+
+    if (tapTempoTimes.size() < 2)
+        return;
+
+    auto intervalSum = 0.0;
+    auto intervalCount = 0;
+
+    for (auto index = size_t { 1 }; index < tapTempoTimes.size(); ++index)
+    {
+        const auto interval = tapTempoTimes[index] - tapTempoTimes[index - 1];
+
+        if (interval <= 0.0 || interval > 2.0)
+            continue;
+
+        intervalSum += interval;
+        ++intervalCount;
+    }
+
+    if (intervalCount <= 0)
+        return;
+
+    const auto averageInterval = intervalSum / static_cast<double>(intervalCount);
+    const auto bpm = juce::jlimit(20.0, 300.0, 60.0 / averageInterval);
+    bpmSlider.setValue(std::round(bpm), juce::sendNotificationSync);
 }
 
 void MainComponent::cycleSnapGrid(int direction)
