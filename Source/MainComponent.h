@@ -137,6 +137,7 @@ private:
     void generateAiChordsForSelectedTrack();
     void generateAiBassForSelectedTrack();
     void generateAiArpForSelectedTrack();
+    void generateAiGuitarForSelectedTrack();
     void generateAiDrumsForSelectedTrack();
     void generateAiDrumFillForSelectedTrack();
     void generateAiMelodyForSelectedTrack();
@@ -191,6 +192,7 @@ private:
     juce::TextButton aiChordsButton;
     juce::TextButton aiBassButton;
     juce::TextButton aiArpButton;
+    juce::TextButton aiGuitarButton;
     juce::TextButton playPauseButton;
     juce::TextButton stopButton;
     juce::TextButton recordButton;

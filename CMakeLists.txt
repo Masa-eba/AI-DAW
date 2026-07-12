@@ -17,11 +17,11 @@ endif()
 add_subdirectory(JUCE)
 
 juce_add_gui_app(MiniDAW
-    PRODUCT_NAME "AI-DAW"
+    PRODUCT_NAME "ABE DAW"
     COMPANY_NAME "Masatoshi"
-    BUNDLE_ID "com.masatoshi.minidaw"
+    BUNDLE_ID "com.masatoshi.abedaw"
     MICROPHONE_PERMISSION_ENABLED TRUE
-    MICROPHONE_PERMISSION_TEXT "AI-DAW uses the microphone to record audio tracks.")
+    MICROPHONE_PERMISSION_TEXT "ABE DAW uses the microphone to record audio tracks.")
 
 target_sources(MiniDAW
     PRIVATE

@@ -175,7 +175,7 @@ bool AudioEngine::startRecording()
     if (getFirstArmedAudioTrack() != nullptr)
     {
         const auto dir = juce::File::getSpecialLocation(juce::File::tempDirectory)
-                             .getChildFile("AI-DAW Recordings");
+                             .getChildFile("ABE DAW Recordings");
         dir.createDirectory();
         const auto file = dir.getChildFile("recording_"
                                            + juce::Time::getCurrentTime().formatted("%Y%m%d_%H%M%S")
@@ -2185,6 +2185,20 @@ bool AudioEngine::generateArpeggio(const TrackId& trackId, const juce::String& s
     return false;
 }
 
+bool AudioEngine::generateGuitarPart(const TrackId& trackId, const juce::String& style)
+{
+    std::scoped_lock lock(modelMutex);
+    saveUndoSnapshotNoLock();
+
+    if (auto* track = projectModel.findMidiTrack(trackId))
+    {
+        track->clips.push_back(createGuitarPartClip(style));
+        return true;
+    }
+
+    return false;
+}
+
 bool AudioEngine::generateDrumPattern(const TrackId& trackId, const juce::String& style)
 {
     std::scoped_lock lock(modelMutex);
@@ -3054,9 +3068,9 @@ MidiClip AudioEngine::createBasslineClip(const juce::String& style) const
         {
             const auto beat = barStart + rhythm[static_cast<size_t>(step)];
             const auto note = (step % 4 == 2) ? root + 7 : root;
-            auto noteOn = juce::MidiMessage::noteOn(1, note, static_cast<juce::uint8>(86));
+            auto noteOn = juce::MidiMessage::noteOn(2, note, static_cast<juce::uint8>(86));
             noteOn.setTimeStamp(beat);
-            auto noteOff = juce::MidiMessage::noteOff(1, note);
+            auto noteOff = juce::MidiMessage::noteOff(2, note);
             noteOff.setTimeStamp(juce::jmin(barStart + 4.0, beat + 0.35));
             clip.sequence.addEvent(noteOn);
             clip.sequence.addEvent(noteOff);
@@ -3091,12 +3105,54 @@ MidiClip AudioEngine::createArpeggioClip(const juce::String& style) const
         {
             const auto beat = barStart + static_cast<double>(step) * 0.25;
             const auto note = arpeggioNotes[static_cast<size_t>(step % static_cast<int>(arpeggioNotes.size()))];
-            auto noteOn = juce::MidiMessage::noteOn(1, note, static_cast<juce::uint8>(78));
+            auto noteOn = juce::MidiMessage::noteOn(3, note, static_cast<juce::uint8>(78));
             noteOn.setTimeStamp(beat);
-            auto noteOff = juce::MidiMessage::noteOff(1, note);
+            auto noteOff = juce::MidiMessage::noteOff(3, note);
             noteOff.setTimeStamp(beat + 0.18);
             clip.sequence.addEvent(noteOn);
             clip.sequence.addEvent(noteOff);
+        }
+    }
+
+    clip.sequence.updateMatchedPairs();
+    return clip;
+}
+
+MidiClip AudioEngine::createGuitarPartClip(const juce::String& style) const
+{
+    const auto chords = getTriadProgression(style);
+    const std::array<double, 6> strumBeats { 0.0, 0.5, 1.5, 2.0, 2.5, 3.5 };
+
+    MidiClip clip;
+    clip.id = juce::Uuid();
+    clip.startBeat = projectModel.getTempoMap().secondsToBeats(getPosition());
+    clip.lengthBeats = 16.0;
+
+    for (auto bar = 0; bar < static_cast<int>(chords.size()); ++bar)
+    {
+        const auto barStart = static_cast<double>(bar) * 4.0;
+        const auto& chord = chords[static_cast<size_t>(bar)];
+
+        for (auto strumIndex = 0; strumIndex < static_cast<int>(strumBeats.size()); ++strumIndex)
+        {
+            const auto beat = barStart + strumBeats[static_cast<size_t>(strumIndex)];
+            const auto velocity = (strumIndex == 0 || strumIndex == 3) ? static_cast<juce::uint8>(92)
+                                                                       : static_cast<juce::uint8>(68);
+            const auto length = (strumIndex == 0 || strumIndex == 3) ? 0.42 : 0.24;
+
+            for (auto noteIndex = 0; noteIndex < 3; ++noteIndex)
+            {
+                const auto note = chord[static_cast<size_t>(noteIndex)] + 12;
+                const auto stagger = static_cast<double>(noteIndex) * 0.015;
+                auto noteOn = juce::MidiMessage::noteOn(3,
+                                                        note,
+                                                        static_cast<juce::uint8>(juce::jmax(48, static_cast<int>(velocity) - noteIndex * 5)));
+                noteOn.setTimeStamp(beat + stagger);
+                auto noteOff = juce::MidiMessage::noteOff(3, note);
+                noteOff.setTimeStamp(juce::jmin(barStart + 4.0, beat + stagger + length));
+                clip.sequence.addEvent(noteOn);
+                clip.sequence.addEvent(noteOff);
+            }
         }
     }
 
@@ -3116,9 +3172,9 @@ MidiClip AudioEngine::createDrumPatternClip(const juce::String& style) const
 
     const auto addHit = [&clip](double beat, int note, juce::uint8 velocity, double length)
     {
-        auto noteOn = juce::MidiMessage::noteOn(1, note, velocity);
+        auto noteOn = juce::MidiMessage::noteOn(10, note, velocity);
         noteOn.setTimeStamp(beat);
-        auto noteOff = juce::MidiMessage::noteOff(1, note);
+        auto noteOff = juce::MidiMessage::noteOff(10, note);
         noteOff.setTimeStamp(beat + length);
         clip.sequence.addEvent(noteOn);
         clip.sequence.addEvent(noteOff);
@@ -3163,9 +3219,9 @@ MidiClip AudioEngine::createDrumFillClip(const juce::String& style) const
 
     const auto addHit = [&clip](double beat, int note, juce::uint8 velocity, double length)
     {
-        auto noteOn = juce::MidiMessage::noteOn(1, note, velocity);
+        auto noteOn = juce::MidiMessage::noteOn(10, note, velocity);
         noteOn.setTimeStamp(beat);
-        auto noteOff = juce::MidiMessage::noteOff(1, note);
+        auto noteOff = juce::MidiMessage::noteOff(10, note);
         noteOff.setTimeStamp(beat + length);
         clip.sequence.addEvent(noteOn);
         clip.sequence.addEvent(noteOff);

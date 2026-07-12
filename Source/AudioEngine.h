@@ -161,6 +161,7 @@ public:
     bool generateChordProgression(const TrackId& trackId, const juce::String& style);
     bool generateBassline(const TrackId& trackId, const juce::String& style);
     bool generateArpeggio(const TrackId& trackId, const juce::String& style);
+    bool generateGuitarPart(const TrackId& trackId, const juce::String& style);
     bool generateDrumPattern(const TrackId& trackId, const juce::String& style);
     bool generateDrumFill(const TrackId& trackId, const juce::String& style);
     bool generateMelody(const TrackId& trackId, const juce::String& style);
@@ -209,6 +210,7 @@ private:
     MidiClip createChordProgressionClip(const juce::String& style) const;
     MidiClip createBasslineClip(const juce::String& style) const;
     MidiClip createArpeggioClip(const juce::String& style) const;
+    MidiClip createGuitarPartClip(const juce::String& style) const;
     MidiClip createDrumPatternClip(const juce::String& style) const;
     MidiClip createDrumFillClip(const juce::String& style) const;
     MidiClip createMelodyClip(const juce::String& style) const;

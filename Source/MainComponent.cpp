@@ -159,6 +159,10 @@ MainComponent::MainComponent()
     aiArpButton.onClick = [this] { generateAiArpForSelectedTrack(); };
     addAndMakeVisible(aiArpButton);
 
+    aiGuitarButton.setButtonText("AI Guitar");
+    aiGuitarButton.onClick = [this] { generateAiGuitarForSelectedTrack(); };
+    addAndMakeVisible(aiGuitarButton);
+
     playPauseButton.setButtonText("Play");
     playPauseButton.onClick = [this]
     {
@@ -542,6 +546,8 @@ void MainComponent::resized()
     aiBassButton.setBounds(clipBar.removeFromLeft(78).reduced(0, 5));
     clipBar.removeFromLeft(8);
     aiArpButton.setBounds(clipBar.removeFromLeft(72).reduced(0, 5));
+    clipBar.removeFromLeft(8);
+    aiGuitarButton.setBounds(clipBar.removeFromLeft(84).reduced(0, 5));
 
     area.removeFromTop(8);
     auto bottom = area.removeFromBottom(126);
@@ -719,6 +725,15 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
         && key.getKeyCode() == 'g')
     {
         quantizeSelectedMidiClipToScale(true);
+        return true;
+    }
+
+    if (key.getModifiers().isCommandDown()
+        && key.getModifiers().isAltDown()
+        && key.getModifiers().isShiftDown()
+        && key.getKeyCode() == 't')
+    {
+        generateAiGuitarForSelectedTrack();
         return true;
     }
 
@@ -1392,7 +1407,7 @@ void MainComponent::selectFirstTrackIfNeeded()
 
 void MainComponent::updateTitleDisplay()
 {
-    auto title = juce::String("AI-DAW");
+    auto title = juce::String("ABE DAW");
 
     if (currentProjectFile != juce::File{})
         title += " - " + currentProjectFile.getFileNameWithoutExtension();
@@ -3474,6 +3489,27 @@ void MainComponent::generateAiArpForSelectedTrack()
     updateTransportDisplay();
 }
 
+void MainComponent::generateAiGuitarForSelectedTrack()
+{
+    const auto selected = getSelectedTrack();
+
+    if (selected.type != TrackType::Midi)
+    {
+        showErrorMessage("Select MIDI track", "Select a MIDI track before generating a guitar part.");
+        return;
+    }
+
+    if (! audioEngine.generateGuitarPart(selected.id, "pop"))
+    {
+        showErrorMessage("AI Guitar failed", "Could not generate a MIDI guitar part.");
+        return;
+    }
+
+    timelineComponent.repaint();
+    updateTimelineSize();
+    updateTransportDisplay();
+}
+
 void MainComponent::generateAiDrumsForSelectedTrack()
 {
     const auto selected = getSelectedTrack();
@@ -3541,7 +3577,7 @@ void MainComponent::exportMix()
 {
     fileChooser = std::make_unique<juce::FileChooser>("Export mix",
                                                        juce::File::getSpecialLocation(juce::File::userDocumentsDirectory)
-                                                           .getChildFile("AI-DAW Mix.wav"),
+                                                           .getChildFile("ABE DAW Mix.wav"),
                                                        "*.wav");
     const auto flags = juce::FileBrowserComponent::saveMode
                      | juce::FileBrowserComponent::canSelectFiles
