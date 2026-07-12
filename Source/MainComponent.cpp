@@ -791,6 +791,22 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
         return true;
     }
 
+    if (key.getModifiers().isCommandDown()
+        && key.getModifiers().isAltDown()
+        && key.getKeyCode() == juce::KeyPress::upKey)
+    {
+        layerSelectedMidiClipOctave(12);
+        return true;
+    }
+
+    if (key.getModifiers().isCommandDown()
+        && key.getModifiers().isAltDown()
+        && key.getKeyCode() == juce::KeyPress::downKey)
+    {
+        layerSelectedMidiClipOctave(-12);
+        return true;
+    }
+
     if (key.getModifiers().isCommandDown() && key.getKeyCode() == juce::KeyPress::upKey)
     {
         transposeSelectedMidiClip(12);
@@ -2213,6 +2229,25 @@ void MainComponent::transposeSelectedMidiClip(int semitones)
     if (! audioEngine.transposeMidiClip(selectedMidiClip->first, selectedMidiClip->second, semitones))
     {
         showErrorMessage("Transpose failed", "The selected MIDI clip could not be transposed.");
+        return;
+    }
+
+    timelineComponent.repaint();
+}
+
+void MainComponent::layerSelectedMidiClipOctave(int semitones)
+{
+    const auto selectedMidiClip = timelineComponent.getSelectedMidiClip();
+
+    if (! selectedMidiClip.has_value())
+    {
+        showErrorMessage("No MIDI clip selected", "Select a MIDI clip before adding an octave layer.");
+        return;
+    }
+
+    if (! audioEngine.addMidiClipOctaveLayer(selectedMidiClip->first, selectedMidiClip->second, semitones))
+    {
+        showErrorMessage("Layer failed", "The selected MIDI clip could not be layered.");
         return;
     }
 

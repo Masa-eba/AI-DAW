@@ -1239,6 +1239,52 @@ bool AudioEngine::transposeMidiClip(const TrackId& trackId, const juce::Uuid& cl
     return false;
 }
 
+bool AudioEngine::addMidiClipOctaveLayer(const TrackId& trackId, const juce::Uuid& clipId, int semitones)
+{
+    if (semitones == 0)
+        return false;
+
+    std::scoped_lock lock(modelMutex);
+    saveUndoSnapshotNoLock();
+
+    if (auto* track = projectModel.findMidiTrack(trackId))
+        for (auto& clip : track->clips)
+            if (clip.id == clipId)
+            {
+                juce::MidiMessageSequence layer;
+
+                for (auto i = 0; i < clip.sequence.getNumEvents(); ++i)
+                {
+                    const auto* event = clip.sequence.getEventPointer(i);
+
+                    if (event == nullptr || ! event->message.isNoteOnOrOff())
+                        continue;
+
+                    auto message = event->message;
+                    const auto note = message.getNoteNumber() + semitones;
+
+                    if (! juce::isPositiveAndBelow(note, 128))
+                        continue;
+
+                    message.setNoteNumber(note);
+                    layer.addEvent(message);
+                }
+
+                if (layer.getNumEvents() == 0)
+                    return false;
+
+                for (auto i = 0; i < layer.getNumEvents(); ++i)
+                    if (const auto* event = layer.getEventPointer(i))
+                        clip.sequence.addEvent(event->message);
+
+                clip.sequence.sort();
+                clip.sequence.updateMatchedPairs();
+                return true;
+            }
+
+    return false;
+}
+
 bool AudioEngine::adjustMidiClipVelocity(const TrackId& trackId, const juce::Uuid& clipId, float delta)
 {
     if (! std::isfinite(delta) || delta == 0.0f)

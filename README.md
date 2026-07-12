@@ -224,6 +224,7 @@ open build/MiniDAW_artefacts/AI-DAW.app
 - `Command + Option + K`: 選択中MidiClipを現在のスナップグリッドでSwing Quantize
 - `Command + ↑ / ↓`: 選択中MidiClipを1オクターブ上下に移調
 - `Command + Shift + ↑ / ↓`: 選択中MidiClipを半音上下に移調
+- `Command + Option + ↑ / ↓`: 選択中MidiClipへ上下オクターブを重ねる
 - `Command + ] / [`：選択中MidiClipのVelocityを上下
 - `Command + Option + V`: 選択中MidiClipのVelocityを80%に統一
 - `Command + Shift + H`: 選択中MidiClipのVelocityをHumanize

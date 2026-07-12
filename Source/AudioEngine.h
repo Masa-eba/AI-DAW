@@ -123,6 +123,7 @@ public:
                                double gridBeats,
                                double swingAmount);
     bool transposeMidiClip(const TrackId& trackId, const juce::Uuid& clipId, int semitones);
+    bool addMidiClipOctaveLayer(const TrackId& trackId, const juce::Uuid& clipId, int semitones);
     bool adjustMidiClipVelocity(const TrackId& trackId, const juce::Uuid& clipId, float delta);
     bool setMidiClipVelocity(const TrackId& trackId, const juce::Uuid& clipId, float velocity);
     bool humanizeMidiClipVelocity(const TrackId& trackId, const juce::Uuid& clipId, float amount);
