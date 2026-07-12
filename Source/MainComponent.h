@@ -38,6 +38,7 @@ private:
     void updateSelectedTrackControls();
     void updateTransportDisplay();
     void updateButtonStates();
+    void updateTimelineSize();
     void importAudioToSelectedTrack();
     void duplicateSelectedClip();
     void deleteSelectedClip();
@@ -68,6 +69,7 @@ private:
     juce::Label masterLabel;
     juce::Label midiInputLabel;
     juce::Label trackLabel;
+    juce::Label zoomLabel;
     juce::TextButton openProjectButton;
     juce::TextButton saveProjectButton;
     juce::TextButton exportButton;
@@ -91,6 +93,7 @@ private:
     juce::TextButton muteButton;
     juce::TextButton soloButton;
     juce::Slider bpmSlider;
+    juce::Slider zoomSlider;
     juce::Slider masterVolumeSlider;
     juce::Slider trackVolumeSlider;
     juce::ComboBox trackSelector;

@@ -34,6 +34,10 @@ MainComponent::MainComponent()
     trackLabel.setColour(juce::Label::textColourId, juce::Colours::white);
     addAndMakeVisible(trackLabel);
 
+    zoomLabel.setText("Zoom", juce::dontSendNotification);
+    zoomLabel.setColour(juce::Label::textColourId, juce::Colours::white);
+    addAndMakeVisible(zoomLabel);
+
     openProjectButton.setButtonText("Open Project");
     openProjectButton.onClick = [this] { openProject(); };
     addAndMakeVisible(openProjectButton);
@@ -199,9 +203,21 @@ MainComponent::MainComponent()
     bpmSlider.onValueChange = [this]
     {
         audioEngine.setBpm(bpmSlider.getValue());
+        updateTimelineSize();
         timelineComponent.repaint();
     };
     addAndMakeVisible(bpmSlider);
+
+    zoomSlider.setSliderStyle(juce::Slider::LinearHorizontal);
+    zoomSlider.setTextBoxStyle(juce::Slider::TextBoxRight, false, 56, 22);
+    zoomSlider.setRange(20.0, 500.0, 1.0);
+    zoomSlider.setValue(100.0, juce::dontSendNotification);
+    zoomSlider.onValueChange = [this]
+    {
+        timelineComponent.setPixelsPerSecond(zoomSlider.getValue());
+        updateTimelineSize();
+    };
+    addAndMakeVisible(zoomSlider);
 
     masterVolumeSlider.setSliderStyle(juce::Slider::LinearHorizontal);
     masterVolumeSlider.setTextBoxStyle(juce::Slider::TextBoxRight, false, 56, 22);
@@ -248,6 +264,7 @@ MainComponent::MainComponent()
                                                 double startTimeSeconds)
     {
         audioEngine.setAudioClipStartTime(trackId, clipId, startTimeSeconds);
+        updateTimelineSize();
         timelineComponent.repaint();
         updateTransportDisplay();
     };
@@ -258,6 +275,7 @@ MainComponent::MainComponent()
     {
         audioEngine.moveAudioClipToTrack(sourceTrackId, destinationTrackId, clipId, startTimeSeconds);
         refreshTrackSelector();
+        updateTimelineSize();
         timelineComponent.repaint();
         updateTransportDisplay();
     };
@@ -266,6 +284,7 @@ MainComponent::MainComponent()
                                                double startBeat)
     {
         audioEngine.setMidiClipStartBeat(trackId, clipId, startBeat);
+        updateTimelineSize();
         timelineComponent.repaint();
         updateTransportDisplay();
     };
@@ -276,6 +295,7 @@ MainComponent::MainComponent()
     {
         audioEngine.moveMidiClipToTrack(sourceTrackId, destinationTrackId, clipId, startBeat);
         refreshTrackSelector();
+        updateTimelineSize();
         timelineComponent.repaint();
         updateTransportDisplay();
     };
@@ -296,6 +316,7 @@ MainComponent::MainComponent()
             audioEngine.setAudioClipStartTime(trackId, track->clips.back().id, startTimeSeconds);
         }
         refreshTrackSelector();
+        updateTimelineSize();
         timelineComponent.repaint();
         updateTransportDisplay();
     };
@@ -397,7 +418,6 @@ void MainComponent::resized()
     area.removeFromTop(8);
     auto bottom = area.removeFromBottom(126);
     timelineViewport.setBounds(area);
-    timelineComponent.setSize(2400, juce::jmax(area.getHeight(), 520));
 
     auto midiBar = bottom.removeFromTop(36);
     midiInputLabel.setBounds(midiBar.removeFromLeft(82));
@@ -405,8 +425,12 @@ void MainComponent::resized()
     midiBar.removeFromLeft(16);
     masterLabel.setBounds(midiBar.removeFromLeft(58));
     masterVolumeSlider.setBounds(midiBar.removeFromLeft(220).reduced(0, 4));
+    midiBar.removeFromLeft(16);
+    zoomLabel.setBounds(midiBar.removeFromLeft(48));
+    zoomSlider.setBounds(midiBar.removeFromLeft(220).reduced(0, 4));
 
     keyboardComponent.setBounds(bottom.reduced(0, 8));
+    updateTimelineSize();
 }
 
 bool MainComponent::keyPressed(const juce::KeyPress& key)
@@ -498,6 +522,7 @@ void MainComponent::refreshTrackSelector()
         selectFirstTrackIfNeeded();
 
     updateSelectedTrackControls();
+    updateTimelineSize();
     timelineComponent.repaint();
 }
 
@@ -556,6 +581,20 @@ void MainComponent::updateButtonStates()
     recordButton.setButtonText(audioEngine.isRecording() ? "Stop Rec" : "Record");
 }
 
+void MainComponent::updateTimelineSize()
+{
+    const auto timelineBounds = timelineViewport.getBounds();
+    const auto visibleWidth = juce::jmax(1, timelineBounds.getWidth());
+    const auto visibleHeight = juce::jmax(1, timelineBounds.getHeight());
+    const auto contentWidth = static_cast<int>(audioEngine.getLength() * zoomSlider.getValue()) + 420;
+    const auto trackCount = audioEngine.getProjectModel().getAudioTracks().size()
+                          + audioEngine.getProjectModel().getMidiTracks().size();
+    const auto contentHeight = 30 + static_cast<int>(trackCount) * 72 + 80;
+
+    timelineComponent.setSize(juce::jmax(visibleWidth, contentWidth),
+                              juce::jmax(visibleHeight, contentHeight));
+}
+
 void MainComponent::importAudioToSelectedTrack()
 {
     const auto selected = getSelectedTrack();
@@ -589,6 +628,7 @@ void MainComponent::importAudioToSelectedTrack()
         }
 
         component->timelineComponent.repaint();
+        component->updateTimelineSize();
         component->updateTransportDisplay();
     });
 }
@@ -606,6 +646,7 @@ void MainComponent::duplicateSelectedClip()
         }
 
         timelineComponent.repaint();
+        updateTimelineSize();
         updateTransportDisplay();
         return;
     }
@@ -621,6 +662,7 @@ void MainComponent::duplicateSelectedClip()
         }
 
         timelineComponent.repaint();
+        updateTimelineSize();
         updateTransportDisplay();
         return;
     }
@@ -641,6 +683,7 @@ void MainComponent::deleteSelectedClip()
         }
 
         timelineComponent.repaint();
+        updateTimelineSize();
         updateTransportDisplay();
         return;
     }
@@ -656,6 +699,7 @@ void MainComponent::deleteSelectedClip()
         }
 
         timelineComponent.repaint();
+        updateTimelineSize();
         updateTransportDisplay();
         return;
     }
@@ -680,6 +724,7 @@ void MainComponent::splitSelectedClip()
     }
 
     timelineComponent.repaint();
+    updateTimelineSize();
     updateTransportDisplay();
 }
 
@@ -746,6 +791,7 @@ void MainComponent::generateAiChordsForSelectedTrack()
     }
 
     timelineComponent.repaint();
+    updateTimelineSize();
     updateTransportDisplay();
 }
 
@@ -838,6 +884,7 @@ void MainComponent::openProject()
         {
             component->refreshTrackSelector();
             component->timelineComponent.repaint();
+            component->updateTimelineSize();
             return;
         }
 
