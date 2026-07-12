@@ -556,7 +556,11 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
 
     if (key.getModifiers().isCommandDown() && key.getKeyCode() == 'd')
     {
-        duplicateSelectedClip();
+        if (key.getModifiers().isShiftDown())
+            duplicateSelectedClipAtPlayhead();
+        else
+            duplicateSelectedClip();
+
         return true;
     }
 
@@ -1264,6 +1268,45 @@ void MainComponent::duplicateSelectedClip()
         timelineComponent.repaint();
         updateTimelineSize();
         updateTransportDisplay();
+        return;
+    }
+
+    showErrorMessage("No clip selected", "Select an audio or MIDI clip before duplicating.");
+}
+
+void MainComponent::duplicateSelectedClipAtPlayhead()
+{
+    if (const auto selectedClip = timelineComponent.getSelectedAudioClip())
+    {
+        if (! audioEngine.duplicateAudioClipAtTime(selectedClip->first,
+                                                  selectedClip->second,
+                                                  audioEngine.getPosition()))
+        {
+            showErrorMessage("Duplicate failed", "The selected audio clip could not be duplicated at the playhead.");
+            return;
+        }
+
+        updateTimelineSize();
+        updateTransportDisplay();
+        timelineComponent.repaint();
+        return;
+    }
+
+    if (const auto selectedMidiClip = timelineComponent.getSelectedMidiClip())
+    {
+        const auto startBeat = audioEngine.getProjectModel().getTempoMap().secondsToBeats(audioEngine.getPosition());
+
+        if (! audioEngine.duplicateMidiClipAtBeat(selectedMidiClip->first,
+                                                 selectedMidiClip->second,
+                                                 startBeat))
+        {
+            showErrorMessage("Duplicate failed", "The selected MIDI clip could not be duplicated at the playhead.");
+            return;
+        }
+
+        updateTimelineSize();
+        updateTransportDisplay();
+        timelineComponent.repaint();
         return;
     }
 

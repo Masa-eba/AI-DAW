@@ -83,6 +83,9 @@ public:
                             double sourceOffsetSeconds,
                             double lengthSeconds);
     bool duplicateAudioClip(const TrackId& trackId, const juce::Uuid& clipId);
+    bool duplicateAudioClipAtTime(const TrackId& trackId,
+                                  const juce::Uuid& clipId,
+                                  double startTimeSeconds);
     bool deleteAudioClip(const TrackId& trackId, const juce::Uuid& clipId);
     bool splitAudioClipAtPosition(const TrackId& trackId, const juce::Uuid& clipId, double positionSeconds);
     bool setAudioClipFade(const TrackId& trackId,
@@ -97,6 +100,9 @@ public:
                              const juce::Uuid& clipId,
                              double startBeat);
     bool duplicateMidiClip(const TrackId& trackId, const juce::Uuid& clipId);
+    bool duplicateMidiClipAtBeat(const TrackId& trackId,
+                                 const juce::Uuid& clipId,
+                                 double startBeat);
     bool deleteMidiClip(const TrackId& trackId, const juce::Uuid& clipId);
     bool quantizeMidiClip(const TrackId& trackId, const juce::Uuid& clipId, double gridBeats);
     bool transposeMidiClip(const TrackId& trackId, const juce::Uuid& clipId, int semitones);

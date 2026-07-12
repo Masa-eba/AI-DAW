@@ -56,6 +56,7 @@ private:
     void nudgeSelectedClip(int direction);
     void adjustSelectedAudioClipGain(float delta);
     void duplicateSelectedClip();
+    void duplicateSelectedClipAtPlayhead();
     void deleteSelectedClip();
     void splitSelectedClip();
     void fadeInSelectedClip();

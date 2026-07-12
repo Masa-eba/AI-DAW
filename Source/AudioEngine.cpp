@@ -579,6 +579,30 @@ bool AudioEngine::duplicateAudioClip(const TrackId& trackId, const juce::Uuid& c
     return false;
 }
 
+bool AudioEngine::duplicateAudioClipAtTime(const TrackId& trackId,
+                                           const juce::Uuid& clipId,
+                                           double startTimeSeconds)
+{
+    if (! std::isfinite(startTimeSeconds))
+        return false;
+
+    std::scoped_lock lock(modelMutex);
+    saveUndoSnapshotNoLock();
+
+    if (auto* track = projectModel.findAudioTrack(trackId))
+        for (const auto& clip : track->clips)
+            if (clip.id == clipId)
+            {
+                auto duplicate = clip;
+                duplicate.id = juce::Uuid();
+                duplicate.startTimeSeconds = juce::jmax(0.0, startTimeSeconds);
+                track->clips.push_back(duplicate);
+                return true;
+            }
+
+    return false;
+}
+
 bool AudioEngine::deleteAudioClip(const TrackId& trackId, const juce::Uuid& clipId)
 {
     std::scoped_lock lock(modelMutex);
@@ -783,6 +807,30 @@ bool AudioEngine::duplicateMidiClip(const TrackId& trackId, const juce::Uuid& cl
                 auto duplicate = clip;
                 duplicate.id = juce::Uuid();
                 duplicate.startBeat += juce::jmax(1.0, clip.lengthBeats);
+                track->clips.push_back(duplicate);
+                return true;
+            }
+
+    return false;
+}
+
+bool AudioEngine::duplicateMidiClipAtBeat(const TrackId& trackId,
+                                          const juce::Uuid& clipId,
+                                          double startBeat)
+{
+    if (! std::isfinite(startBeat))
+        return false;
+
+    std::scoped_lock lock(modelMutex);
+    saveUndoSnapshotNoLock();
+
+    if (auto* track = projectModel.findMidiTrack(trackId))
+        for (const auto& clip : track->clips)
+            if (clip.id == clipId)
+            {
+                auto duplicate = clip;
+                duplicate.id = juce::Uuid();
+                duplicate.startBeat = juce::jmax(0.0, startBeat);
                 track->clips.push_back(duplicate);
                 return true;
             }
