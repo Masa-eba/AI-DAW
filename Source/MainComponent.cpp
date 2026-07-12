@@ -2,6 +2,7 @@
 
 #include "TimeFormatter.h"
 
+#include <array>
 #include <cmath>
 
 MainComponent::MainComponent()
@@ -130,13 +131,14 @@ MainComponent::MainComponent()
     quantizeMidiButton.onClick = [this] { quantizeSelectedMidiClip(); };
     addAndMakeVisible(quantizeMidiButton);
 
-    snapButton.setButtonText("Snap");
     snapButton.setClickingTogglesState(true);
     snapButton.setToggleState(true, juce::dontSendNotification);
     snapButton.onClick = [this]
     {
         timelineComponent.setSnapEnabled(snapButton.getToggleState());
+        updateSnapButtonText();
     };
+    updateSnapButtonText();
     addAndMakeVisible(snapButton);
 
     aiChordsButton.setButtonText("AI Chords");
@@ -507,7 +509,7 @@ void MainComponent::resized()
     clipBar.removeFromLeft(8);
     quantizeMidiButton.setBounds(clipBar.removeFromLeft(84).reduced(0, 5));
     clipBar.removeFromLeft(8);
-    snapButton.setBounds(clipBar.removeFromLeft(62).reduced(0, 5));
+    snapButton.setBounds(clipBar.removeFromLeft(98).reduced(0, 5));
     clipBar.removeFromLeft(8);
     aiChordsButton.setBounds(clipBar.removeFromLeft(92).reduced(0, 5));
 
@@ -622,6 +624,18 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
     if (key.getModifiers().isAltDown() && key.getKeyCode() == juce::KeyPress::rightKey)
     {
         movePlayheadByGrid(1, key.getModifiers().isShiftDown());
+        return true;
+    }
+
+    if (key.getModifiers().isAltDown() && key.getKeyCode() == ']')
+    {
+        cycleSnapGrid(1);
+        return true;
+    }
+
+    if (key.getModifiers().isAltDown() && key.getKeyCode() == '[')
+    {
+        cycleSnapGrid(-1);
         return true;
     }
 
@@ -880,6 +894,37 @@ void MainComponent::moveSelectedTrack(int direction)
     timelineComponent.repaint();
 }
 
+void MainComponent::cycleSnapGrid(int direction)
+{
+    static constexpr std::array<double, 4> gridValues { 1.0, 0.5, 0.25, 0.125 };
+
+    snapGridIndex = juce::jlimit(0,
+                                 static_cast<int>(gridValues.size()) - 1,
+                                 snapGridIndex + direction);
+    timelineComponent.setSnapGridBeats(gridValues[static_cast<size_t>(snapGridIndex)]);
+    updateSnapButtonText();
+}
+
+void MainComponent::updateSnapButtonText()
+{
+    const auto gridBeats = timelineComponent.getSnapGridBeats();
+    juce::String label = "Snap ";
+
+    if (gridBeats >= 1.0)
+        label += "1/4";
+    else if (gridBeats >= 0.5)
+        label += "1/8";
+    else if (gridBeats >= 0.25)
+        label += "1/16";
+    else
+        label += "1/32";
+
+    if (! snapButton.getToggleState())
+        label += " Off";
+
+    snapButton.setButtonText(label);
+}
+
 void MainComponent::movePlayheadByGrid(int direction, bool byBar)
 {
     if (direction == 0)
@@ -996,7 +1041,7 @@ void MainComponent::nudgeSelectedClip(int direction)
         return;
 
     const auto& tempo = audioEngine.getProjectModel().getTempoMap();
-    const auto stepBeats = 0.25;
+    const auto stepBeats = timelineComponent.getSnapGridBeats();
     const auto stepSeconds = tempo.beatsToSeconds(stepBeats);
 
     if (const auto selectedAudioClip = timelineComponent.getSelectedAudioClip())
@@ -1244,7 +1289,9 @@ void MainComponent::quantizeSelectedMidiClip()
         return;
     }
 
-    if (! audioEngine.quantizeMidiClip(selectedMidiClip->first, selectedMidiClip->second, 0.25))
+    if (! audioEngine.quantizeMidiClip(selectedMidiClip->first,
+                                       selectedMidiClip->second,
+                                       timelineComponent.getSnapGridBeats()))
     {
         showErrorMessage("Quantize failed", "The selected MIDI clip could not be quantized.");
         return;

@@ -45,6 +45,8 @@ private:
     void panicAllNotes();
     void renameSelectedTrack();
     void moveSelectedTrack(int direction);
+    void cycleSnapGrid(int direction);
+    void updateSnapButtonText();
     void loopSelectedClip();
     void movePlayheadByGrid(int direction, bool byBar);
     void importAudioToSelectedTrack();
@@ -122,6 +124,7 @@ private:
     std::unique_ptr<juce::FileChooser> fileChooser;
     juce::Array<juce::MidiDeviceInfo> midiDevices;
     std::set<int> activeComputerKeyboardNotes;
+    int snapGridIndex = 2;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MainComponent)
 };

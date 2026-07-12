@@ -57,6 +57,17 @@ void TimelineComponent::clearLoopRange()
     repaint();
 }
 
+void TimelineComponent::setSnapGridBeats(double beats)
+{
+    snapGridBeats = juce::jlimit(0.125, 1.0, beats);
+    repaint();
+}
+
+double TimelineComponent::getSnapGridBeats() const
+{
+    return snapGridBeats;
+}
+
 bool TimelineComponent::isSnapEnabled() const
 {
     return snapEnabled;
@@ -790,7 +801,7 @@ double TimelineComponent::snapSeconds(double seconds) const
         return juce::jmax(0.0, seconds);
 
     const auto beatSeconds = 60.0 / projectModel->getBpm();
-    const auto snapStep = beatSeconds / 4.0;
+    const auto snapStep = beatSeconds * snapGridBeats;
 
     if (snapStep <= 0.0)
         return juce::jmax(0.0, seconds);

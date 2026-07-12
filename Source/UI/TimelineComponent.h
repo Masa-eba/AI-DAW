@@ -18,6 +18,8 @@ public:
     void setSnapEnabled(bool enabled);
     void setLoopRange(double startSeconds, double endSeconds);
     void clearLoopRange();
+    void setSnapGridBeats(double beats);
+    double getSnapGridBeats() const;
     bool isSnapEnabled() const;
     std::optional<std::pair<TrackId, juce::Uuid>> getSelectedAudioClip() const;
     std::optional<std::pair<TrackId, juce::Uuid>> getSelectedMidiClip() const;
@@ -80,6 +82,7 @@ private:
     bool hasLoopRange = false;
     double loopStartSeconds = 0.0;
     double loopEndSeconds = 0.0;
+    double snapGridBeats = 0.25;
     bool snapEnabled = true;
     bool draggingAudioClip = false;
     bool trimmingAudioClip = false;
