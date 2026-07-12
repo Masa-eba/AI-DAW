@@ -198,6 +198,7 @@ open build/MiniDAW_artefacts/AI-DAW.app
 - `Option + Shift + ← / →`: 再生位置を前後の小節へ移動
 - `Option + ↑ / ↓`: 前後のトラックを選択
 - `Option + Shift + ↑ / ↓`: 選択中トラックを同種トラック内で上下へ移動
+- `Option + R / M / S`: 選択中トラックのRecord Arm / Mute / Soloを切替
 - `Option + [ / ]`: スナップグリッドを4分、8分、16分、32分で切り替え
 - `Option + M`: 現在位置にマーカーを追加
 - `Option + Shift + M`: 再生位置付近のマーカー名を変更

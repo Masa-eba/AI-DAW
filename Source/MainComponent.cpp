@@ -866,6 +866,24 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
         return true;
     }
 
+    if (key.getModifiers().isAltDown() && key.getKeyCode() == 'r')
+    {
+        toggleSelectedTrackArm();
+        return true;
+    }
+
+    if (key.getModifiers().isAltDown() && key.getKeyCode() == 'm')
+    {
+        toggleSelectedTrackMute();
+        return true;
+    }
+
+    if (key.getModifiers().isAltDown() && key.getKeyCode() == 's')
+    {
+        toggleSelectedTrackSolo();
+        return true;
+    }
+
     if (key.getModifiers().isAltDown()
         && (key.getKeyCode() == juce::KeyPress::deleteKey
             || key.getKeyCode() == juce::KeyPress::backspaceKey))
@@ -1427,6 +1445,66 @@ void MainComponent::clearAllTrackMuteSolo()
 void MainComponent::clearAllTrackArms()
 {
     audioEngine.clearTrackArms();
+    updateSelectedTrackControls();
+    timelineComponent.repaint();
+}
+
+void MainComponent::toggleSelectedTrackArm()
+{
+    const auto selected = getSelectedTrack();
+    auto armed = false;
+
+    if (selected.type == TrackType::Audio)
+    {
+        if (const auto* track = audioEngine.getProjectModel().findAudioTrack(selected.id))
+            armed = track->state.armed;
+    }
+    else if (const auto* track = audioEngine.getProjectModel().findMidiTrack(selected.id))
+    {
+        armed = track->state.armed;
+    }
+
+    audioEngine.setTrackArmed(selected.id, ! armed);
+    updateSelectedTrackControls();
+    timelineComponent.repaint();
+}
+
+void MainComponent::toggleSelectedTrackMute()
+{
+    const auto selected = getSelectedTrack();
+    auto muted = false;
+
+    if (selected.type == TrackType::Audio)
+    {
+        if (const auto* track = audioEngine.getProjectModel().findAudioTrack(selected.id))
+            muted = track->state.muted;
+    }
+    else if (const auto* track = audioEngine.getProjectModel().findMidiTrack(selected.id))
+    {
+        muted = track->state.muted;
+    }
+
+    audioEngine.setTrackMuted(selected.id, ! muted);
+    updateSelectedTrackControls();
+    timelineComponent.repaint();
+}
+
+void MainComponent::toggleSelectedTrackSolo()
+{
+    const auto selected = getSelectedTrack();
+    auto solo = false;
+
+    if (selected.type == TrackType::Audio)
+    {
+        if (const auto* track = audioEngine.getProjectModel().findAudioTrack(selected.id))
+            solo = track->state.solo;
+    }
+    else if (const auto* track = audioEngine.getProjectModel().findMidiTrack(selected.id))
+    {
+        solo = track->state.solo;
+    }
+
+    audioEngine.setTrackSolo(selected.id, ! solo);
     updateSelectedTrackControls();
     timelineComponent.repaint();
 }

@@ -49,6 +49,9 @@ private:
     void duplicateSelectedTrack();
     void clearAllTrackMuteSolo();
     void clearAllTrackArms();
+    void toggleSelectedTrackArm();
+    void toggleSelectedTrackMute();
+    void toggleSelectedTrackSolo();
     void moveSelectedTrack(int direction);
     void selectAdjacentTrack(int direction);
     void cycleSnapGrid(int direction);
