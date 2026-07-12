@@ -1415,6 +1415,20 @@ bool AudioEngine::generateChordProgression(const TrackId& trackId, const juce::S
     return false;
 }
 
+bool AudioEngine::generateBassline(const TrackId& trackId, const juce::String& style)
+{
+    std::scoped_lock lock(modelMutex);
+    saveUndoSnapshotNoLock();
+
+    if (auto* track = projectModel.findMidiTrack(trackId))
+    {
+        track->clips.push_back(createBasslineClip(style));
+        return true;
+    }
+
+    return false;
+}
+
 void AudioEngine::setMidiKeyboardState(juce::MidiKeyboardState* state)
 {
     keyboardState = state;
@@ -2037,6 +2051,41 @@ MidiClip AudioEngine::createChordProgressionClip(const juce::String& style) cons
             noteOn.setTimeStamp(beat);
             auto noteOff = juce::MidiMessage::noteOff(1, note);
             noteOff.setTimeStamp(beat + 3.8);
+            clip.sequence.addEvent(noteOn);
+            clip.sequence.addEvent(noteOff);
+        }
+    }
+
+    clip.sequence.updateMatchedPairs();
+    return clip;
+}
+
+MidiClip AudioEngine::createBasslineClip(const juce::String& style) const
+{
+    const auto normalized = style.toLowerCase();
+    const std::array<int, 4> popRoots { 36, 43, 45, 41 };
+    const std::array<int, 4> minorRoots { 33, 41, 36, 40 };
+    const auto& roots = normalized.contains("minor") ? minorRoots : popRoots;
+    const std::array<double, 8> rhythm { 0.0, 0.5, 1.5, 2.0, 2.5, 3.0, 3.5, 3.75 };
+
+    MidiClip clip;
+    clip.id = juce::Uuid();
+    clip.startBeat = projectModel.getTempoMap().secondsToBeats(getPosition());
+    clip.lengthBeats = 16.0;
+
+    for (auto bar = 0; bar < static_cast<int>(roots.size()); ++bar)
+    {
+        const auto root = roots[static_cast<size_t>(bar)];
+        const auto barStart = static_cast<double>(bar) * 4.0;
+
+        for (auto step = 0; step < static_cast<int>(rhythm.size()); ++step)
+        {
+            const auto beat = barStart + rhythm[static_cast<size_t>(step)];
+            const auto note = (step % 4 == 2) ? root + 7 : root;
+            auto noteOn = juce::MidiMessage::noteOn(1, note, static_cast<juce::uint8>(86));
+            noteOn.setTimeStamp(beat);
+            auto noteOff = juce::MidiMessage::noteOff(1, note);
+            noteOff.setTimeStamp(juce::jmin(barStart + 4.0, beat + 0.35));
             clip.sequence.addEvent(noteOn);
             clip.sequence.addEvent(noteOff);
         }

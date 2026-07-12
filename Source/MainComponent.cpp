@@ -147,6 +147,10 @@ MainComponent::MainComponent()
     aiChordsButton.onClick = [this] { generateAiChordsForSelectedTrack(); };
     addAndMakeVisible(aiChordsButton);
 
+    aiBassButton.setButtonText("AI Bass");
+    aiBassButton.onClick = [this] { generateAiBassForSelectedTrack(); };
+    addAndMakeVisible(aiBassButton);
+
     playPauseButton.setButtonText("Play");
     playPauseButton.onClick = [this]
     {
@@ -524,6 +528,8 @@ void MainComponent::resized()
     snapButton.setBounds(clipBar.removeFromLeft(98).reduced(0, 5));
     clipBar.removeFromLeft(8);
     aiChordsButton.setBounds(clipBar.removeFromLeft(92).reduced(0, 5));
+    clipBar.removeFromLeft(8);
+    aiBassButton.setBounds(clipBar.removeFromLeft(78).reduced(0, 5));
 
     area.removeFromTop(8);
     auto bottom = area.removeFromBottom(126);
@@ -2016,6 +2022,27 @@ void MainComponent::generateAiChordsForSelectedTrack()
     if (! audioEngine.generateChordProgression(selected.id, "pop"))
     {
         showErrorMessage("AI Chords failed", "Could not generate a MIDI chord progression.");
+        return;
+    }
+
+    timelineComponent.repaint();
+    updateTimelineSize();
+    updateTransportDisplay();
+}
+
+void MainComponent::generateAiBassForSelectedTrack()
+{
+    const auto selected = getSelectedTrack();
+
+    if (selected.type != TrackType::Midi)
+    {
+        showErrorMessage("Select MIDI track", "Select a MIDI track before generating a bassline.");
+        return;
+    }
+
+    if (! audioEngine.generateBassline(selected.id, "pop"))
+    {
+        showErrorMessage("AI Bass failed", "Could not generate a MIDI bassline.");
         return;
     }
 

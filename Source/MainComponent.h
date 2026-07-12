@@ -81,6 +81,7 @@ private:
     void humanizeSelectedMidiClipTiming();
     void legatoSelectedMidiClip();
     void generateAiChordsForSelectedTrack();
+    void generateAiBassForSelectedTrack();
     void exportMix();
     void exportSelectedTrack();
     void saveProject();
@@ -128,6 +129,7 @@ private:
     juce::TextButton quantizeMidiButton;
     juce::TextButton snapButton;
     juce::TextButton aiChordsButton;
+    juce::TextButton aiBassButton;
     juce::TextButton playPauseButton;
     juce::TextButton stopButton;
     juce::TextButton recordButton;

@@ -123,6 +123,7 @@ public:
     bool legatoMidiClip(const TrackId& trackId, const juce::Uuid& clipId);
     bool toggleMidiClipMuted(const TrackId& trackId, const juce::Uuid& clipId);
     bool generateChordProgression(const TrackId& trackId, const juce::String& style);
+    bool generateBassline(const TrackId& trackId, const juce::String& style);
 
     void setMidiKeyboardState(juce::MidiKeyboardState* state);
     bool saveProject(const juce::File& file);
@@ -164,6 +165,7 @@ private:
     bool anySoloedTrack() const;
     bool shouldRenderTrack(const TrackState& state, bool anySolo) const;
     MidiClip createChordProgressionClip(const juce::String& style) const;
+    MidiClip createBasslineClip(const juce::String& style) const;
     AudioTrack* getFirstArmedAudioTrack();
     MidiTrack* getFirstArmedMidiTrack();
     void saveUndoSnapshotNoLock();
