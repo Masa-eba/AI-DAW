@@ -1756,6 +1756,59 @@ bool AudioEngine::staccatoMidiClip(const TrackId& trackId, const juce::Uuid& cli
     return false;
 }
 
+bool AudioEngine::setMidiClipNoteLength(const TrackId& trackId,
+                                        const juce::Uuid& clipId,
+                                        double lengthBeats)
+{
+    if (! std::isfinite(lengthBeats) || lengthBeats <= 0.0)
+        return false;
+
+    std::scoped_lock lock(modelMutex);
+    saveUndoSnapshotNoLock();
+
+    if (auto* track = projectModel.findMidiTrack(trackId))
+        for (auto& clip : track->clips)
+            if (clip.id == clipId)
+            {
+                clip.sequence.updateMatchedPairs();
+                auto changed = false;
+                auto foundNotePair = false;
+                const auto safeLength = juce::jlimit(0.05, juce::jmax(0.05, clip.lengthBeats), lengthBeats);
+
+                for (auto i = 0; i < clip.sequence.getNumEvents(); ++i)
+                {
+                    auto* noteOnEvent = clip.sequence.getEventPointer(i);
+
+                    if (noteOnEvent == nullptr || ! noteOnEvent->message.isNoteOn())
+                        continue;
+
+                    auto* noteOffEvent = noteOnEvent->noteOffObject;
+
+                    if (noteOffEvent == nullptr)
+                        continue;
+
+                    foundNotePair = true;
+                    const auto startBeat = noteOnEvent->message.getTimeStamp();
+                    const auto targetEndBeat = juce::jlimit(startBeat + 0.05,
+                                                           clip.lengthBeats,
+                                                           startBeat + safeLength);
+
+                    if (std::abs(noteOffEvent->message.getTimeStamp() - targetEndBeat) > 0.000001)
+                    {
+                        noteOffEvent->message.setTimeStamp(targetEndBeat);
+                        changed = true;
+                    }
+                }
+
+                if (changed)
+                    clip.sequence.updateMatchedPairs();
+
+                return foundNotePair;
+            }
+
+    return false;
+}
+
 bool AudioEngine::reverseMidiClip(const TrackId& trackId, const juce::Uuid& clipId)
 {
     std::scoped_lock lock(modelMutex);

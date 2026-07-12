@@ -824,6 +824,15 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
 
     if (key.getModifiers().isCommandDown()
         && key.getModifiers().isAltDown()
+        && key.getModifiers().isShiftDown()
+        && key.getKeyCode() == 'l')
+    {
+        setSelectedMidiClipNoteLengthToGrid();
+        return true;
+    }
+
+    if (key.getModifiers().isCommandDown()
+        && key.getModifiers().isAltDown()
         && key.getKeyCode() == 'l')
     {
         staccatoSelectedMidiClip();
@@ -2819,6 +2828,27 @@ void MainComponent::staccatoSelectedMidiClip()
     if (! audioEngine.staccatoMidiClip(selectedMidiClip->first, selectedMidiClip->second))
     {
         showErrorMessage("Staccato failed", "The selected MIDI clip could not be made staccato.");
+        return;
+    }
+
+    timelineComponent.repaint();
+}
+
+void MainComponent::setSelectedMidiClipNoteLengthToGrid()
+{
+    const auto selectedMidiClip = timelineComponent.getSelectedMidiClip();
+
+    if (! selectedMidiClip.has_value())
+    {
+        showErrorMessage("No MIDI clip selected", "Select a MIDI clip before setting note length.");
+        return;
+    }
+
+    if (! audioEngine.setMidiClipNoteLength(selectedMidiClip->first,
+                                           selectedMidiClip->second,
+                                           timelineComponent.getSnapGridBeats()))
+    {
+        showErrorMessage("Length failed", "The selected MIDI clip notes could not be set to the grid length.");
         return;
     }
 

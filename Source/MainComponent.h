@@ -106,6 +106,7 @@ private:
     void humanizeSelectedMidiClipTiming();
     void legatoSelectedMidiClip();
     void staccatoSelectedMidiClip();
+    void setSelectedMidiClipNoteLengthToGrid();
     void reverseSelectedMidiClip();
     void generateAiChordsForSelectedTrack();
     void generateAiBassForSelectedTrack();
