@@ -1,148 +1,206 @@
 # ABE DAW
 
 ABE DAWは、C++20、JUCE、CMakeで開発しているmacOS向けのネイティブDTMアプリです。
+複数Audio/MIDIトラック、タイムライン編集、録音、簡易シンセ、Piano Roll、ローカルAI MIDI生成、WAV書き出し、プロジェクト保存を扱えます。
 
-現在のDTM版MVPでは、複数のAudio/MIDIトラック、BPM、タイムライン、メトロノーム、画面鍵盤、簡易シンセ、録音、クリップ編集、ローカルAI MIDI生成、ミックス/Stem WAV書き出し、プロジェクト保存の基礎を実装しています。
+## できること
 
-## 機能
+### プロジェクト
+
+- 新規プロジェクト作成
+- `.aidaw`プロジェクト保存 / 読み込み
+- 保存時のAudio素材コピー
+- Audio素材の相対パス保存
+- 現在プロジェクト名のタイトル表示
+- Undo / Redo
+- 約1分のDemo Song生成
+
+### トラック
 
 - 複数Audioトラック
 - 複数MIDIトラック
-- トラック名変更
-- トラック複製と作成トラックの自動選択
+- トラック追加 / 削除 / 名前変更 / 複製
 - トラック上下移動
-- 新規プロジェクト作成
-- Demo Song生成
-- タイトルへの現在プロジェクト名表示
-- AudioトラックへのWAV / AIFF / AIF / MP3読み込み
-- 全トラック同期再生 / 一時停止 / 停止 / シーク
-- BPM設定
-- Tap TempoによるBPM設定
-- 小節 / 拍グリッドつきタイムライン
-- 再生位置線
-- タイムラインマーカー追加 / 前後ジャンプ
-- Timeline Zoom
-- メトロノーム
-- トラックごとのVolume / Pan / Mute / Solo / Record Arm
-- 全トラックのMute / Solo一括解除
-- マスター音量
-- マスターピークホールドメーター
-- Monoモニター
-- ループ再生
-- 選択Clipの範囲ループ
-- タイムライン上のループ範囲表示
-- Undo / Redo
-- 4分 / 8分 / 16分 / 32分グリッドへのスナップ移動
-- 選択Clipのグリッド単位ナッジ移動
-- 再生位置の拍 / 小節移動
-- AudioClipの選択 / 複製 / 削除
-- AudioClipのコピー / 再生位置へのペースト
-- AudioClipの再生位置への複製
-- AudioClipのループ終端までの反復複製
-- AudioClipの再生位置への移動
-- AudioClip Mute
-- AudioClip / MidiClipのSplit
+- トラック選択
+- Volume / Pan
+- Mute / Solo
+- Record Arm
+- 全トラックのMute / Solo解除
+- 全トラックのRecord Arm解除
+- 選択トラックのStem WAV書き出し
+
+### Audio
+
+- WAV / AIFF / AIF / MP3読み込み
+- Audioファイルのドラッグ&ドロップ読み込み
+- AudioClipの波形プレビュー
+- AudioClipの選択 / 移動 / トラック間移動
 - AudioClipの左右端トリム
-- AudioClipのソース開始位置リセット
-- AudioClipのFade In / Fade Out
-- AudioClipの両端クリック除去用ショートフェード
-- AudioClipのFade Clear
-- AudioClipのClip Gain調整
-- AudioClip Normalize
-- AudioClip Reverse
-- AudioClipのドラッグ移動
-- AudioClipのAudioトラック間移動
-- AudioClipのタイムライン波形プレビュー
-- MidiClipの選択 / 複製 / 削除
-- MidiClipのコピー / 再生位置へのペースト
-- MidiClipの再生位置への複製
-- MidiClipのループ終端までの反復複製
-- MidiClipの再生位置への移動
-- MidiClip Mute
-- MidiClipのドラッグ移動
-- MidiClipのMIDIトラック間移動
-- MidiClipのタイムラインノートプレビュー
-- MidiClipの右端トリム
-- MidiClipダブルクリックで開くPiano Roll編集
-- Piano Rollでのノート追加 / 削除 / 移動 / 長さ変更 / Velocity編集
-- MidiClipの16分クオンタイズ
-- MidiClipのメジャー / マイナースケール補正
-- MidiClipのオクターブ上下移調
-- MidiClipのピッチ反転
-- MidiClipのVelocity上下調整
-- MidiClipのVelocity Accent
-- MidiClipのVelocity Humanize
-- MidiClipのTiming Humanize
-- MidiClip Legato
-- MidiClipのノート長をスナップグリッドへ固定
-- MidiClipのDouble-time / Half-time
+- AudioClipのSplit
+- AudioClipの複製 / 削除
+- AudioClipのコピー / ペースト
+- AudioClipの再生位置への移動
+- AudioClipのループ終端までの反復複製
+- AudioClip Mute
+- Clip Gain調整
+- Normalize
+- Reverse
+- Fade In / Fade Out
+- 両端クリック除去用ショートフェード
+- Fade Clear
+- マイク録音の基礎
+
+### MIDI
+
+- MIDIトラックごとのInstrument選択
+  - Lead
+  - Bass
+  - Guitar
+  - Drum
 - 画面鍵盤によるMIDI発音
 - PCキーボードによるMIDI発音
 - 外部MIDI入力デバイス選択
-- 内蔵サイン波シンセ
-- MIDIトラックごとのInstrument選択（Lead / Bass / Guitar / Drum）
-- Panic / All Notes Off
 - MIDI録音の基礎
-- AI Chordsによる簡易コード進行生成
-- AI Bassによる簡易ベースライン生成
-- AI Arpによる簡易アルペジオ生成
-- AI Guitarによる簡易ギターストラム生成
-- AI Drumsによる簡易ドラムパターン生成
-- AI Drum Fillによる簡易ドラムフィル生成
-- AI Melodyによる簡易リードメロディ生成
-- Melody / Bass / Guitar / Drum向けのチャンネル別簡易音色
-- マイク録音の基礎
+- MidiClipのノートプレビュー
+- MidiClipの選択 / 移動 / MIDIトラック間移動
+- MidiClipの右端トリム
+- MidiClipのSplit
+- MidiClipの複製 / 削除
+- MidiClipのコピー / ペースト
+- MidiClipの再生位置への移動
+- MidiClipのループ終端までの反復複製
+- MidiClip Mute
+- 16分クオンタイズ
+- Swing Quantize
+- メジャー / マイナースケール補正
+- オクターブ上下移調
+- 半音上下移調
+- ピッチ反転
+- Velocity上下調整
+- Velocity Accent
+- Velocity Humanize
+- Timing Humanize
+- Legato / Staccato
+- ノート長のグリッド固定
+- Double-time / Half-time
+
+### Piano Roll
+
+- MidiClipダブルクリックでPiano Rollを開く
+- ノート追加
+- ノート削除
+- ノート移動
+- ノート長変更
+- Velocity編集
+
+### 再生・タイムライン
+
+- 全トラック同期再生
+- 一時停止
+- Stopで先頭へ戻る
+- シーク
+- 小節 / 拍グリッド
+- 再生位置線
+- BPM設定
+- Tap Tempo
+- Timeline Zoom
+- 4分 / 8分 / 16分 / 32分グリッド切替
+- スナップON/OFF
+- 選択Clipのグリッド単位ナッジ移動
+- 再生位置の拍 / 小節移動
+- タイムラインマーカー追加 / 名前変更 / 削除 / 前後ジャンプ
+- ループ再生
+- 選択Clipの範囲ループ
+- 現在小節 / 8小節ループ
+- タイムライン上のループ範囲表示
+
+### 音源・ミックス・書き出し
+
+- 24ボイスの簡易シンセ
+- Lead / Bass / Guitar / Drum向け簡易音色
+- メトロノーム
+- メトロノーム音量調整
+- Master Volume
+- マスターピークホールドメーター
+- Monoモニター
+- Panic / All Notes Off
 - 全トラックのミックスWAV書き出し
 - 選択トラックのStem WAV書き出し
-- `.aidaw`プロジェクト保存 / 読み込み
-- プロジェクト保存時のAudio素材コピーと相対パス保存
 
-## 技術スタック
+### ローカルAI生成
 
-- C++20
-- JUCE
-- CMake
-- macOS
-- Apple Silicon
+外部AI APIには接続せず、ローカルルールベースでMIDIクリップを生成します。
 
-## 必要環境
+- AI Chords
+- AI Bass
+- AI Arp
+- AI Guitar
+- AI Drums
+- AI Drum Fill
+- AI Melody
+- Demo Song
 
-- macOS
-- Xcode Command Line Tools
-- CMake 3.22以上
-- Git
+## 画面の見方
 
-## macOS権限
+ABE DAWの画面は上から順に機能別に分かれています。
 
-マイク録音にはmacOSのマイク権限が必要です。初回録音時または起動時に権限確認が表示された場合は許可してください。
+| エリア | 役割 |
+| --- | --- |
+| `PROJECT` | New、Demo Song、Open、Save、Export、トラック追加 |
+| `TRANSPORT` | Play、Stop、Record、Loop、BPM、Metronome、現在位置 |
+| `TRACK` | 選択トラック、Instrument、Import Audio、R/M/S、Volume、Pan |
+| `CLIP EDIT` | Duplicate、Delete、Split、Fade、Quantize、Snap、Zoom |
+| `AI / GENERATE` | AI MIDI生成、MIDI入力デバイス |
+| `Timeline` | Audio/MIDIクリップ編集、ドラッグ&ドロップ、シーク |
+| `OUTPUT` | Master、Mono、Peak、Reset Peak |
+| `KEYBOARD` | 画面鍵盤 |
 
-## クローン
+ボタンにマウスを乗せると、各機能の説明ツールチップが表示されます。
 
-JUCEはGit Submoduleとして管理しています。
+## よく使う流れ
 
-```bash
-git clone --recursive git@github.com:Masa-eba/AI-DAW.git
-cd AI-DAW
-```
+### 1. サンプル曲を鳴らす
 
-`--recursive`なしでクローンした場合は、以下を実行してください。
+1. `Demo Song`を押す
+2. `Play`を押す
+3. 必要なら`Master`で音量を調整する
 
-```bash
-git submodule update --init --recursive
-```
+### 2. Audioファイルを配置する
 
-## ビルド
+1. `+ Audio Track`を押す
+2. Audioトラックを選択する
+3. `Import Audio`を押す、または音声ファイルをタイムライン上のAudioトラックへドロップする
+4. AudioClipをドラッグして再生位置を動かす
+5. クリップ端をドラッグしてトリムする
 
-```bash
-cmake -S . -B build
-cmake --build build
-```
+### 3. MIDIを録音する
 
-## 起動
+1. `+ MIDI Track`を押す
+2. `Instrument`で音色を選ぶ
+3. `R`をONにする
+4. 画面鍵盤、PCキーボード、または外部MIDIキーボードで演奏する
+5. `Record`を押して録音する
 
-```bash
-open build/MiniDAW_artefacts/ABE\ DAW.app
-```
+### 4. Piano RollでMIDIを編集する
+
+1. MidiClipをダブルクリックする
+2. 空いている場所をクリックしてノートを追加する
+3. ノートをドラッグして移動する
+4. ノート右端をドラッグして長さを変更する
+5. ノートを右クリックして削除する
+6. Velocityスライダーで強さを変更する
+
+### 5. AI MIDIを作る
+
+1. `+ MIDI Track`を押す
+2. MIDIトラックを選択する
+3. `AI Chords`、`AI Bass`、`AI Arp`、`AI Guitar`などを押す
+4. 必要ならPiano Rollで編集する
+
+### 6. 書き出す
+
+- 全体を書き出す場合は`Export Mix`
+- 選択トラックだけを書き出す場合は`Export Track`
 
 ## MIDI確認方法
 
@@ -152,154 +210,170 @@ open build/MiniDAW_artefacts/ABE\ DAW.app
   - `A W S E D F T G Y H U J K`
   - Cから1オクターブ分の白鍵 / 黒鍵に対応
 
-## 基本操作
-
-1. `New`で新規プロジェクトを作成
-2. `Demo Song`でDrums / Bass / Guitar / Melodyの約1分サンプル曲を生成
-3. `+ Audio Track`でAudioトラックを追加
-4. トラックを選択して`Import Audio`から音声ファイルを読み込む
-5. `+ MIDI Track`でMIDIトラックを追加
-6. `Rename`で選択中トラック名を変更
-7. `Dup Track`で選択中トラックを複製
-8. `Option + Shift + ↑ / ↓`で選択中トラックを上下へ移動
-9. MIDIトラックを選択して`R`を有効化
-10. `Instrument`でLead / Bass / Guitar / Drumを選択
-11. 画面鍵盤または外部MIDIキーボードで発音
-12. `Record`で録音
-13. AudioClipを掴んでタイムライン上で移動
-14. AudioClipの左右端をドラッグして非破壊トリム
-15. 再生位置線をAudioClip内に置いて`Split`で分割
-16. `Duplicate Clip` / `Delete Clip`でAudioClipを編集
-17. `Fade In` / `Fade Out`で1秒フェードを適用
-18. `Command + = / -`で選択中AudioClipのClip Gainを上下
-19. `Command + C / V`で選択中AudioClip / MidiClipをコピーし、再生位置へペースト
-20. `Loop Clip`で選択中AudioClip / MidiClipの範囲を繰り返し再生
-21. `Command + Option + Shift + P`で選択中Clipを現在のループ範囲終端まで反復複製
-22. `AI Chords`で選択中MIDIトラックへコード進行を生成
-23. `AI Bass`で選択中MIDIトラックへベースラインを生成
-24. `AI Arp`で選択中MIDIトラックへアルペジオを生成
-25. `AI Guitar`で選択中MIDIトラックへギターストラムを生成
-26. `Command + Option + U`で選択中MIDIトラックへドラムパターンを生成
-27. `Command + Option + Shift + U`で選択中MIDIトラックへドラムフィルを生成
-28. `Command + Option + Y`で選択中MIDIトラックへリードメロディを生成
-29. MidiClipを掴んでタイムライン上または別MIDIトラックへ移動
-30. MidiClipの右端をドラッグして長さを変更
-31. MidiClipをダブルクリックしてPiano Rollを開く
-32. Piano Rollでノートをクリック追加、ドラッグ移動、右端ドラッグで長さ変更
-33. Piano Rollでノートを右クリック削除、Velocityスライダーで強さを変更
-34. `Duplicate Clip` / `Delete Clip`でMidiClipを編集
-35. `Quantize`で選択中MidiClipを現在のスナップグリッドへ揃える
-36. `Command + ↑ / ↓`で選択中MidiClipをオクターブ上下に移調
-37. `Command + ] / [`で選択中MidiClipのVelocityを上下
-38. `Command + Option + Shift + [ / ]`で選択中MidiClipをDouble-time / Half-timeに変換
-39. `Zoom`でタイムラインの横方向表示倍率を調整
-40. `Command + ← / →`で選択中Clipを現在のスナップグリッド単位で左右へ移動
-41. `Command + J`で選択中Clipを再生位置へ移動
-42. `Option + ← / →`で再生位置を前後の拍へ移動
-43. `Option + Shift + ← / →`で再生位置を前後の小節へ移動
-44. `Option + M`で現在位置にマーカーを追加
-45. `Command + Option + M`で選択中Clipの先頭にマーカーを追加
-46. `Option + Shift + M`で再生位置付近のマーカー名を変更
-47. `Option + Delete`で再生位置付近のマーカーを削除
-48. `Option + , / .`で前後のマーカーへ移動
-49. `M / S / Volume / Pan`でトラックを調整
-50. `Loop`でプロジェクト長の範囲を繰り返し再生
-51. `Panic`または`Esc`で鳴りっぱなしのMIDIノートを停止
-52. `Export Mix`でミックス結果を書き出す
-53. `Export Track`で選択トラックだけをStemとして書き出す
-
-## プロジェクト保存
-
-`.aidaw`保存時、AudioClipが参照している音声素材はプロジェクトファイルと同じ階層の`Audio/`フォルダへコピーされます。
-プロジェクトJSON内には`Audio/filename.wav`のような相対パスを保存するため、プロジェクトフォルダ単位で移動しやすくなっています。
-
 ## ショートカット
 
+### 基本
+
 - `Space`: 再生 / 一時停止
-- `Home`: 再生位置を先頭へ移動
-- `End`: 再生位置をプロジェクト末尾へ移動
+- `Home`: 先頭へ移動
+- `End`: プロジェクト末尾へ移動
 - `Esc`: Panic / All Notes Off
 - `Command + N`: 新規プロジェクト
 - `Command + O`: プロジェクトを開く
 - `Command + S`: プロジェクトを保存
-- `Command + Shift + S`: 名前を付けてプロジェクトを保存
-- `Command + Option + E`: ミックスを書き出し
-- `Command + Option + Shift + E`: 選択トラックをStemとして書き出し
+- `Command + Shift + S`: 名前を付けて保存
 - `Command + Z`: Undo
 - `Command + Shift + Z`: Redo
-- `Command + C`: 選択中AudioClip / MidiClipをコピー
-- `Command + V`: コピーしたAudioClip / MidiClipを再生位置へペースト
-- `Command + Shift + A`: 全トラックのRecord Armを解除
-- `Command + Shift + U`: 全トラックのMute / Soloを解除
-- `Command + Option + D`: 選択中トラックを複製
-- `Command + ← / →`: 選択中AudioClip / MidiClipを現在のスナップグリッド単位で左右へ移動
-- `Command + Shift + ← / →`: 選択中AudioClip / MidiClipの右端を現在のスナップグリッド単位で伸縮
-- `Command + Option + ← / →`: 再生位置を選択中AudioClip / MidiClipの先頭 / 末尾へ移動
-- `Command + J`: 選択中AudioClip / MidiClipを再生位置へ移動
-- `Tab` / `Shift + Tab`: 次 / 前のAudioClip / MidiClipを選択
-- `Option + C`: 現在の再生位置に重なっているAudioClip / MidiClipを選択
-- `Option + Q`: 選択中AudioClip / MidiClipの開始位置を最寄りの小節頭へ揃える
-- `Option + ← / →`: 再生位置を前後の拍へ移動
-- `Option + Shift + ← / →`: 再生位置を前後の小節へ移動
+
+### 書き出し
+
+- `Command + Option + E`: ミックスを書き出し
+- `Command + Option + Shift + E`: 選択トラックをStemとして書き出し
+
+### トラック
+
 - `Option + ↑ / ↓`: 前後のトラックを選択
 - `Option + Shift + ↑ / ↓`: 選択中トラックを同種トラック内で上下へ移動
-- `Option + R / M / S`: 選択中トラックのRecord Arm / Mute / Soloを切替
-- `Option + Shift + R`: 選択中トラックだけをRecord Armにする
-- `Option + Shift + S`: 選択中トラックだけをSoloにする
+- `Option + R`: 選択中トラックのRecord Arm切替
+- `Option + M`: 選択中トラックのMute切替
+- `Option + S`: 選択中トラックのSolo切替
+- `Option + Shift + R`: 選択中トラックだけをRecord Arm
+- `Option + Shift + S`: 選択中トラックだけをSolo
 - `Option + 0`: 選択中トラックのVolume / Panを基準値へ戻す
-- `Option + Shift + 0`: Master Volumeを基準値へ戻す
-- `Option + F`: プロジェクト全体が見えるようにTimeline Zoomを調整
-- `Option + T`: Tap TempoでBPMを設定
-- `Option + = / -`: メトロノーム音量を上下
-- `Option + [ / ]`: スナップグリッドを4分、8分、16分、32分で切り替え
+- `Command + Shift + A`: 全トラックのRecord Arm解除
+- `Command + Shift + U`: 全トラックのMute / Solo解除
+- `Command + Option + D`: 選択中トラックを複製
+
+### クリップ共通
+
+- `Command + C`: 選択中AudioClip / MidiClipをコピー
+- `Command + V`: コピーしたClipを再生位置へペースト
+- `Command + D`: 選択中Clipを複製
+- `Command + Shift + D`: 選択中Clipを再生位置へ複製
+- `Command + Option + Shift + D`: 選択中Clipを次の小節頭へ複製
+- `Command + Option + P`: 選択中Clipを直後へ連結複製
+- `Command + Option + Shift + P`: 選択中Clipをループ範囲終端まで反復複製
+- `Command + Shift + M`: 選択中ClipのMute切替
+- `Command + E`: 選択中Clipを再生位置でSplit
+- `Command + ← / →`: 選択中Clipをグリッド単位で左右へ移動
+- `Command + Shift + ← / →`: 選択中Clipの右端をグリッド単位で伸縮
+- `Command + Option + ← / →`: 再生位置を選択Clipの先頭 / 末尾へ移動
+- `Command + J`: 選択中Clipを再生位置へ移動
+- `Tab` / `Shift + Tab`: 次 / 前のClipを選択
+- `Option + C`: 再生位置に重なっているClipを選択
+- `Option + Q`: 選択中Clipの開始位置を最寄りの小節頭へ揃える
+- `Delete` / `Backspace`: 選択中Clipを削除
+
+### AudioClip
+
+- `Command + Option + F`: Fade In / Outをクリア
+- `Command + Option + I / O`: Fade In / Outを0.25秒増やす
+- `Command + Option + Shift + I / O`: Fade In / Outを0.25秒減らす
+- `Command + Option + B`: 両端に50msフェードを設定
+- `Command + = / -`: Clip Gainを上下
+- `Command + 0`: Clip Gainを1.0へ戻す
+- `Command + Option + Shift + 0`: ソース開始位置を0へ戻す
+- `Command + Shift + N`: Normalize
+- `Command + Shift + R`: Reverse切替
+
+### MidiClip
+
+- `Command + K`: 現在グリッドでQuantize
+- `Command + Option + K`: Swing Quantize
+- `Command + Shift + G`: メジャースケール補正
+- `Command + Option + G`: マイナースケール補正
+- `Command + ↑ / ↓`: 1オクターブ上下に移調
+- `Command + Shift + ↑ / ↓`: 半音上下に移調
+- `Command + Shift + I`: ピッチ反転
+- `Command + Option + ↑ / ↓`: 上下オクターブを重ねる
+- `Command + ] / [`：Velocityを上下
+- `Command + Option + V`: Velocityを80%に統一
+- `Command + Option + A`: Velocityに拍アクセント
+- `Command + Shift + H`: Velocity Humanize
+- `Command + Option + H`: Timing Humanize
+- `Command + Shift + L`: Legato
+- `Command + Option + L`: Staccato
+- `Command + Option + Shift + L`: ノート長を現在グリッドへ固定
+- `Command + Option + Shift + [ / ]`: Double-time / Half-time
+
+### タイムライン
+
+- `Option + ← / →`: 再生位置を前後の拍へ移動
+- `Option + Shift + ← / →`: 再生位置を前後の小節へ移動
+- `Option + F`: プロジェクト全体が見えるようにZoom
+- `Option + T`: Tap Tempo
+- `Option + [ / ]`: スナップグリッド切替
+- `Option + B`: 現在小節をループ範囲に設定
+- `Option + Shift + L`: 現在位置から8小節をループ範囲に設定
+- `Option + Shift + B`: ループ範囲を解除
+
+### マーカー
+
 - `Option + M`: 現在位置にマーカーを追加
-- `Command + Option + M`: 選択中AudioClip / MidiClipの先頭にマーカーを追加
+- `Command + Option + M`: 選択中Clipの先頭にマーカーを追加
 - `Option + Shift + M`: 再生位置付近のマーカー名を変更
 - `Option + Delete` / `Option + Backspace`: 再生位置付近のマーカーを削除
 - `Option + , / .`: 前後のマーカーへ移動
-- `Option + B`: 現在の小節をループ範囲に設定
-- `Option + Shift + L`: 現在位置の小節から8小節をループ範囲に設定
-- `Option + Shift + B`: ループ範囲を解除
-- `Command + D`: 選択中AudioClip / MidiClipを複製
-- `Command + Shift + D`: 選択中AudioClip / MidiClipを再生位置へ複製
-- `Command + Option + Shift + D`: 選択中AudioClip / MidiClipを次の小節頭へ複製
-- `Command + Option + P`: 選択中AudioClip / MidiClipを直後へ連結複製
-- `Command + Option + Shift + P`: 選択中AudioClip / MidiClipを現在のループ範囲終端まで反復複製
-- `Command + Shift + M`: 選択中AudioClip / MidiClipのMute切替
-- `Command + E`: 選択中AudioClip / MidiClipを再生位置でSplit
-- `Command + Option + F`: 選択中AudioClipのFade In / Outをクリア
-- `Command + Option + I / O`: 選択中AudioClipのFade In / Outを0.25秒増やす
-- `Command + Option + Shift + I / O`: 選択中AudioClipのFade In / Outを0.25秒減らす
-- `Command + Option + B`: 選択中AudioClipの両端に50msフェードを設定
-- `Command + = / -`: 選択中AudioClipのClip Gainを上下
-- `Command + 0`: 選択中AudioClipのClip Gainを1.0へ戻す
-- `Command + Option + Shift + 0`: 選択中AudioClipのソース開始位置を0へ戻す
-- `Command + Shift + N`: 選択中AudioClipのClip Gainをピーク基準でNormalize
-- `Command + Shift + R`: 選択中AudioClipのReverse切替
-- `Command + Option + R`: 選択中MidiClipを時間反転
-- `Command + K`: 選択中MidiClipを現在のスナップグリッドでクオンタイズ
-- `Command + Option + K`: 選択中MidiClipを現在のスナップグリッドでSwing Quantize
-- `Command + Shift + G`: 選択中MidiClipを推定ルートのメジャースケールへ補正
-- `Command + Option + G`: 選択中MidiClipを推定ルートのマイナースケールへ補正
-- `Command + Option + U`: 選択中MIDIトラックへAI Drumsを生成
-- `Command + Option + Shift + U`: 選択中MIDIトラックへAI Drum Fillを生成
-- `Command + Option + Shift + T`: 選択中MIDIトラックへAI Guitarを生成
-- `Command + Option + Y`: 選択中MIDIトラックへAI Melodyを生成
-- `Command + Option + Shift + Y`: 約1分のDemo Songを生成
-- `Command + ↑ / ↓`: 選択中MidiClipを1オクターブ上下に移調
-- `Command + Shift + ↑ / ↓`: 選択中MidiClipを半音上下に移調
-- `Command + Shift + I`: 選択中MidiClipのピッチを反転
-- `Command + Option + ↑ / ↓`: 選択中MidiClipへ上下オクターブを重ねる
-- `Command + ] / [`：選択中MidiClipのVelocityを上下
-- `Command + Option + V`: 選択中MidiClipのVelocityを80%に統一
-- `Command + Option + A`: 選択中MidiClipのVelocityに拍アクセントを付ける
-- `Command + Shift + H`: 選択中MidiClipのVelocityをHumanize
-- `Command + Option + H`: 選択中MidiClipのタイミングをHumanize
-- `Command + Shift + L`: 選択中MidiClipのノート長をLegato化
-- `Command + Option + L`: 選択中MidiClipのノート長をStaccato化
-- `Command + Option + Shift + L`: 選択中MidiClipのノート長を現在のスナップグリッドへ固定
-- `Command + Option + Shift + [ / ]`: 選択中MidiClipをDouble-time / Half-timeに変換
-- `Delete` / `Backspace`: 選択中AudioClip / MidiClipを削除
+
+### AI生成
+
+- `Command + Option + U`: AI Drums
+- `Command + Option + Shift + U`: AI Drum Fill
+- `Command + Option + Shift + T`: AI Guitar
+- `Command + Option + Y`: AI Melody
+- `Command + Option + Shift + Y`: Demo Song
+
+### ミックス
+
+- `Option + = / -`: メトロノーム音量を上下
+- `Option + Shift + 0`: Master Volumeを基準値へ戻す
+
+## ビルド
+
+### 必要環境
+
+- macOS
+- Apple Silicon Mac
+- Xcode Command Line Tools
+- CMake 3.22以上
+- Git
+
+### 取得
+
+JUCEはGit Submoduleとして管理しています。
+
+```bash
+git clone --recursive git@github.com:Masa-eba/AI-DAW.git
+cd AI-DAW
+```
+
+`--recursive`なしでクローンした場合:
+
+```bash
+git submodule update --init --recursive
+```
+
+### ビルド
+
+```bash
+cmake -S . -B build
+cmake --build build
+```
+
+### 起動
+
+```bash
+open build/MiniDAW_artefacts/ABE\ DAW.app
+```
+
+## macOS権限
+
+マイク録音にはmacOSのマイク権限が必要です。権限確認が表示された場合は許可してください。
+
+## プロジェクト保存
+
+`.aidaw`保存時、AudioClipが参照している音声素材はプロジェクトファイルと同じ階層の`Audio/`フォルダへコピーされます。
+プロジェクトJSON内には`Audio/filename.wav`のような相対パスを保存するため、プロジェクトフォルダ単位で移動できます。
 
 ## ディレクトリ構成
 
@@ -314,25 +388,26 @@ AI-DAW/
     ├── MainComponent.cpp
     ├── AudioEngine.h
     ├── AudioEngine.cpp
+    ├── Audio/
+    │   ├── AudioClip.h
+    │   ├── AudioRecorder.h
+    │   ├── AudioRecorder.cpp
+    │   ├── AudioTrack.h
+    │   ├── AudioTrack.cpp
+    │   ├── Metronome.h
+    │   └── Metronome.cpp
     ├── Core/
     │   ├── ProjectModel.h
     │   ├── ProjectModel.cpp
     │   ├── TempoMap.h
-    │   └── TempoMap.cpp
-    ├── Audio/
-    │   ├── AudioTrack.h
-    │   ├── AudioTrack.cpp
-    │   ├── AudioClip.h
-    │   ├── AudioRecorder.h
-    │   ├── AudioRecorder.cpp
-    │   ├── Metronome.h
-    │   └── Metronome.cpp
+    │   ├── TempoMap.cpp
+    │   └── TrackTypes.h
     ├── Midi/
-    │   ├── MidiTrack.h
-    │   ├── MidiTrack.cpp
     │   ├── MidiClip.h
     │   ├── MidiInputManager.h
     │   ├── MidiInputManager.cpp
+    │   ├── MidiTrack.h
+    │   ├── MidiTrack.cpp
     │   ├── SimpleSynth.h
     │   └── SimpleSynth.cpp
     ├── UI/
@@ -340,62 +415,50 @@ AI-DAW/
     │   ├── PianoRollComponent.cpp
     │   ├── TimelineComponent.h
     │   └── TimelineComponent.cpp
-    ├── WaveformComponent.h
-    ├── WaveformComponent.cpp
-    ├── TimeFormatter.h
-    └── TimeFormatter.cpp
+    └── Utils/
+        ├── TimeFormatter.h
+        └── TimeFormatter.cpp
 ```
 
 ## 主要クラス
 
-- `ProjectModel`
-  - BPM、Audio/MIDIトラック、プロジェクト保存状態を管理
-
+- `MainComponent`
+  - 画面レイアウト、FileChooser、UIイベント接続
 - `AudioEngine`
-  - `AudioIODeviceCallback`として出力、入力、録音、ミックスを担当
-  - 全トラックを共通トランスポート位置で同期
-
+  - オーディオ/MIDI再生、録音、ミックス、書き出し
+- `ProjectModel`
+  - BPM、トラック、クリップ、マーカー、プロジェクト保存
 - `AudioTrack`
-  - AudioClip、トラック音量、Mute、Solo、Record Armを保持
-
+  - AudioClip、音量、Pan、Mute、Solo、Record Arm
 - `MidiTrack`
-  - MidiClip、Instrument、トラック音量、Mute、Solo、Record Armを保持
-
-- `SimpleSynth`
-  - 16ボイスの簡易サイン波シンセ
-
-- `Metronome`
-  - オーディオコールバック内でBPM同期クリックを生成
-
-- `AudioRecorder`
-  - `AudioFormatWriter::ThreadedWriter`でマイク録音を書き込み
-
+  - MidiClip、Instrument、音量、Pan、Mute、Solo、Record Arm
 - `TimelineComponent`
-  - 小節線、拍線、Audio/MIDIクリップ、再生位置線を描画
-  - AudioClip / MidiClipのドラッグ移動、ファイルドロップ、スナップを担当
-
+  - タイムライン描画、クリップ移動、トリム、ファイルドロップ
 - `PianoRollComponent`
-  - MidiClip内のノート追加、削除、移動、長さ変更、Velocity編集を担当
+  - MIDIノート追加、削除、移動、長さ変更、Velocity編集
+- `SimpleSynth`
+  - Lead / Bass / Guitar / Drum簡易音源
+- `Metronome`
+  - BPM同期クリック生成
+- `AudioRecorder`
+  - ThreadedWriterによるマイク録音
 
 ## 現在の制限
 
-- Piano Rollは基礎編集のみで、CC編集や複数選択編集は未実装
-- AudioClip編集はSplit、左右端トリム、複製、コピー/ペースト、削除、Fade、Clip Gain、Normalize、Reverseなどに対応
-- MidiClip編集は移動、右端トリム、Split、複製、コピー/ペースト、削除、グリッドクオンタイズ、移調、Velocity調整、Humanize、Legato / Staccato、Double-time / Half-timeに対応
+- Piano Rollは基礎編集のみで、複数選択編集やMIDI CC編集は未実装
 - Audioタイムストレッチは未実装
 - VST / AUプラグインには未対応
-- MIDI CC編集は未実装
-- AI Chords / AI Bass / AI Arp / AI Guitar / AI Drums / AI Drum Fill / AI Melodyはローカルの簡易MIDI生成で、外部AI APIは未接続
+- AI生成はローカルの簡易MIDI生成で、外部AI APIは未接続
 - 内蔵音色は簡易シンセによる近似で、サンプル音源や物理モデリングではない
 - Audioファイルは現在メモリへ読み込むため、長時間ファイルには不向き
 - マイク録音とMIDI録音は基礎実装で、同時録音や詳細編集は今後の対象
 
 ## 今後の予定
 
-- ピアノロール
-- MIDIノート編集
-- AudioClip編集
-- 複数クリップ編集
+- Piano Rollの複数選択編集
+- MIDI CC編集
+- AudioClipの高度編集
+- 複数クリップ一括編集
 - エフェクト
 - Audio-to-MIDI
 - AIコード提案

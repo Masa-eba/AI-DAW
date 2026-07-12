@@ -1,6 +1,6 @@
 #include "MainComponent.h"
 
-#include "TimeFormatter.h"
+#include "Utils/TimeFormatter.h"
 
 #include <array>
 #include <cmath>
@@ -12,11 +12,51 @@ MainComponent::MainComponent()
 {
     audioEngine.setMidiKeyboardState(&keyboardState);
 
+    const auto configureSectionLabel = [this](juce::Label& label, const juce::String& text)
+    {
+        label.setText(text, juce::dontSendNotification);
+        label.setFont(juce::Font(juce::FontOptions(13.0f, juce::Font::bold)));
+        label.setColour(juce::Label::textColourId, juce::Colour(0xffaeb7c4));
+        label.setJustificationType(juce::Justification::centredLeft);
+        addAndMakeVisible(label);
+    };
+
+    const auto configureButton = [](juce::TextButton& button,
+                                    const juce::String& tooltip,
+                                    juce::Colour colour)
+    {
+        button.setTooltip(tooltip);
+        button.setColour(juce::TextButton::buttonColourId, colour);
+        button.setColour(juce::TextButton::buttonOnColourId, colour.brighter(0.18f));
+        button.setColour(juce::TextButton::textColourOffId, juce::Colours::white);
+        button.setColour(juce::TextButton::textColourOnId, juce::Colours::white);
+    };
+
+    const auto projectColour = juce::Colour(0xff334155);
+    const auto transportColour = juce::Colour(0xff2563eb);
+    const auto editColour = juce::Colour(0xff475569);
+    const auto trackColour = juce::Colour(0xff0f766e);
+    const auto aiColour = juce::Colour(0xff7c3aed);
+    const auto dangerColour = juce::Colour(0xffb91c1c);
+
     titleLabel.setJustificationType(juce::Justification::centredLeft);
     titleLabel.setFont(juce::Font(juce::FontOptions(26.0f, juce::Font::bold)));
     titleLabel.setColour(juce::Label::textColourId, juce::Colours::white);
     addAndMakeVisible(titleLabel);
     updateTitleDisplay();
+
+    configureSectionLabel(projectSectionLabel, "PROJECT");
+    configureSectionLabel(transportSectionLabel, "TRANSPORT");
+    configureSectionLabel(trackSectionLabel, "TRACK");
+    configureSectionLabel(clipSectionLabel, "CLIP EDIT");
+    configureSectionLabel(aiSectionLabel, "AI / GENERATE");
+    configureSectionLabel(outputSectionLabel, "OUTPUT");
+    configureSectionLabel(keyboardSectionLabel, "KEYBOARD");
+
+    hintLabel.setText("Ready", juce::dontSendNotification);
+    hintLabel.setColour(juce::Label::textColourId, juce::Colour(0xffcbd5e1));
+    hintLabel.setJustificationType(juce::Justification::centredRight);
+    addAndMakeVisible(hintLabel);
 
     positionLabel.setText("00:00 / 00:00   Bar 1 Beat 1", juce::dontSendNotification);
     positionLabel.setColour(juce::Label::textColourId, juce::Colours::white);
@@ -367,6 +407,49 @@ MainComponent::MainComponent()
     };
     addAndMakeVisible(midiInputSelector);
 
+    configureButton(newProjectButton, "Create a blank project.", projectColour);
+    configureButton(demoSongButton, "Create a one-minute demo with drums, bass, guitar, and melody.", aiColour);
+    configureButton(openProjectButton, "Open a .aidaw project file.", projectColour);
+    configureButton(saveProjectButton, "Save the current project.", projectColour);
+    configureButton(exportButton, "Export the whole mix as a WAV file.", projectColour);
+    configureButton(exportTrackButton, "Export the selected track as a stem WAV file.", projectColour);
+    configureButton(addAudioTrackButton, "Add an audio track for files or microphone recording.", trackColour);
+    configureButton(addMidiTrackButton, "Add a MIDI track for keyboard input, AI generation, or Piano Roll editing.", trackColour);
+    configureButton(renameTrackButton, "Rename the selected track.", trackColour);
+    configureButton(duplicateTrackButton, "Duplicate the selected track and its clips.", trackColour);
+    configureButton(deleteTrackButton, "Delete the selected track.", dangerColour);
+    configureButton(importAudioButton, "Import an audio file into the selected Audio track.", trackColour);
+    configureButton(duplicateClipButton, "Duplicate the selected audio or MIDI clip.", editColour);
+    configureButton(deleteClipButton, "Delete the selected audio or MIDI clip.", dangerColour);
+    configureButton(splitClipButton, "Split the selected clip at the playhead.", editColour);
+    configureButton(fadeInButton, "Apply a one-second fade in to the selected audio clip.", editColour);
+    configureButton(fadeOutButton, "Apply a one-second fade out to the selected audio clip.", editColour);
+    configureButton(quantizeMidiButton, "Quantize the selected MIDI clip to the current grid.", editColour);
+    configureButton(snapButton, "Toggle timeline snapping and show the current grid size.", editColour);
+    configureButton(aiChordsButton, "Generate a MIDI chord progression on the selected MIDI track.", aiColour);
+    configureButton(aiBassButton, "Generate a bassline on the selected MIDI track.", aiColour);
+    configureButton(aiArpButton, "Generate an arpeggio on the selected MIDI track.", aiColour);
+    configureButton(aiGuitarButton, "Generate a guitar strum part on the selected MIDI track.", aiColour);
+    configureButton(playPauseButton, "Start playback or pause at the current position.", transportColour);
+    configureButton(stopButton, "Stop playback and return to the start.", editColour);
+    configureButton(recordButton, "Record into the armed Audio or MIDI track.", dangerColour);
+    configureButton(loopButton, "Loop the active project or selected loop range.", transportColour);
+    configureButton(loopClipButton, "Loop the selected clip range.", transportColour);
+    configureButton(metronomeButton, "Turn BPM-synced metronome clicks on or off.", transportColour);
+    configureButton(panicButton, "Stop stuck MIDI notes immediately.", dangerColour);
+    configureButton(armButton, "Record-arm the selected track.", dangerColour);
+    configureButton(muteButton, "Mute the selected track.", editColour);
+    configureButton(soloButton, "Solo the selected track.", editColour);
+    configureButton(monoButton, "Monitor the master output in mono.", editColour);
+    trackSelector.setTooltip("Select the active track for editing and recording.");
+    instrumentSelector.setTooltip("Choose the selected MIDI track sound.");
+    midiInputSelector.setTooltip("Choose an external MIDI input device.");
+    bpmSlider.setTooltip("Project tempo in BPM.");
+    zoomSlider.setTooltip("Horizontal zoom of the timeline.");
+    masterVolumeSlider.setTooltip("Master output volume.");
+    trackVolumeSlider.setTooltip("Selected track volume.");
+    trackPanSlider.setTooltip("Selected track stereo pan.");
+
     timelineComponent.setProjectModel(&audioEngine.getProjectModel());
     timelineComponent.onSeek = [this](double seconds)
     {
@@ -498,115 +581,108 @@ void MainComponent::paint(juce::Graphics& graphics)
 
 void MainComponent::resized()
 {
-    auto area = getLocalBounds().reduced(16);
+    auto area = getLocalBounds().reduced(18);
+    constexpr auto labelWidth = 112;
+    constexpr auto rowHeight = 38;
+    constexpr auto rowGap = 4;
 
-    titleLabel.setBounds(area.removeFromTop(42));
+    auto titleRow = area.removeFromTop(40);
+    titleLabel.setBounds(titleRow.removeFromLeft(380));
+    hintLabel.setBounds(titleRow);
 
-    auto projectBar = area.removeFromTop(36);
-    newProjectButton.setBounds(projectBar.removeFromLeft(72).reduced(0, 3));
-    projectBar.removeFromLeft(8);
-    demoSongButton.setBounds(projectBar.removeFromLeft(104).reduced(0, 3));
-    projectBar.removeFromLeft(8);
-    openProjectButton.setBounds(projectBar.removeFromLeft(120).reduced(0, 3));
-    projectBar.removeFromLeft(8);
-    saveProjectButton.setBounds(projectBar.removeFromLeft(78).reduced(0, 3));
-    projectBar.removeFromLeft(8);
-    exportButton.setBounds(projectBar.removeFromLeft(110).reduced(0, 3));
-    projectBar.removeFromLeft(8);
-    exportTrackButton.setBounds(projectBar.removeFromLeft(118).reduced(0, 3));
-    projectBar.removeFromLeft(16);
-    addAudioTrackButton.setBounds(projectBar.removeFromLeft(130).reduced(0, 3));
-    projectBar.removeFromLeft(8);
-    addMidiTrackButton.setBounds(projectBar.removeFromLeft(124).reduced(0, 3));
+    const auto takeRow = [&area](juce::Label& sectionLabel)
+    {
+        auto row = area.removeFromTop(rowHeight);
+        sectionLabel.setBounds(row.removeFromLeft(labelWidth));
+        return row;
+    };
 
-    auto transportBar = area.removeFromTop(44);
-    playPauseButton.setBounds(transportBar.removeFromLeft(88).reduced(0, 5));
-    transportBar.removeFromLeft(8);
-    stopButton.setBounds(transportBar.removeFromLeft(76).reduced(0, 5));
-    transportBar.removeFromLeft(8);
-    recordButton.setBounds(transportBar.removeFromLeft(92).reduced(0, 5));
-    transportBar.removeFromLeft(12);
-    loopButton.setBounds(transportBar.removeFromLeft(72).reduced(0, 5));
-    transportBar.removeFromLeft(8);
-    loopClipButton.setBounds(transportBar.removeFromLeft(92).reduced(0, 5));
-    transportBar.removeFromLeft(8);
-    bpmLabel.setBounds(transportBar.removeFromLeft(38));
-    bpmSlider.setBounds(transportBar.removeFromLeft(160).reduced(0, 4));
-    transportBar.removeFromLeft(8);
-    metronomeButton.setBounds(transportBar.removeFromLeft(112).reduced(0, 5));
-    transportBar.removeFromLeft(12);
-    panicButton.setBounds(transportBar.removeFromLeft(72).reduced(0, 5));
-    transportBar.removeFromLeft(12);
+    const auto place = [](juce::Rectangle<int>& row, juce::Component& component, int width)
+    {
+        component.setBounds(row.removeFromLeft(width).reduced(0, 4));
+        row.removeFromLeft(7);
+    };
+
+    auto projectBar = takeRow(projectSectionLabel);
+    place(projectBar, newProjectButton, 66);
+    place(projectBar, demoSongButton, 104);
+    place(projectBar, openProjectButton, 116);
+    place(projectBar, saveProjectButton, 72);
+    place(projectBar, exportButton, 104);
+    place(projectBar, exportTrackButton, 116);
+    place(projectBar, addAudioTrackButton, 124);
+    place(projectBar, addMidiTrackButton, 120);
+
+    area.removeFromTop(rowGap);
+    auto transportBar = takeRow(transportSectionLabel);
+    place(transportBar, playPauseButton, 84);
+    place(transportBar, stopButton, 70);
+    place(transportBar, recordButton, 84);
+    place(transportBar, loopButton, 68);
+    place(transportBar, loopClipButton, 88);
+    place(transportBar, metronomeButton, 106);
+    place(transportBar, panicButton, 70);
+    bpmLabel.setBounds(transportBar.removeFromLeft(36));
+    bpmSlider.setBounds(transportBar.removeFromLeft(150).reduced(0, 4));
+    transportBar.removeFromLeft(10);
     positionLabel.setBounds(transportBar);
 
-    auto trackBar = area.removeFromTop(44);
-    trackLabel.setBounds(trackBar.removeFromLeft(48));
-    trackSelector.setBounds(trackBar.removeFromLeft(180).reduced(0, 5));
-    trackBar.removeFromLeft(8);
-    instrumentSelector.setBounds(trackBar.removeFromLeft(112).reduced(0, 5));
-    trackBar.removeFromLeft(8);
-    importAudioButton.setBounds(trackBar.removeFromLeft(112).reduced(0, 5));
-    trackBar.removeFromLeft(8);
-    renameTrackButton.setBounds(trackBar.removeFromLeft(82).reduced(0, 5));
-    trackBar.removeFromLeft(8);
-    duplicateTrackButton.setBounds(trackBar.removeFromLeft(92).reduced(0, 5));
-    trackBar.removeFromLeft(8);
-    deleteTrackButton.setBounds(trackBar.removeFromLeft(80).reduced(0, 5));
-    trackBar.removeFromLeft(8);
-    armButton.setBounds(trackBar.removeFromLeft(36).reduced(0, 5));
-    trackBar.removeFromLeft(4);
-    muteButton.setBounds(trackBar.removeFromLeft(36).reduced(0, 5));
-    trackBar.removeFromLeft(4);
-    soloButton.setBounds(trackBar.removeFromLeft(36).reduced(0, 5));
-    trackBar.removeFromLeft(8);
-    trackVolumeSlider.setBounds(trackBar.removeFromLeft(190).reduced(0, 5));
-    trackBar.removeFromLeft(8);
-    trackPanSlider.setBounds(trackBar.removeFromLeft(170).reduced(0, 5));
+    area.removeFromTop(rowGap);
+    auto trackBar = takeRow(trackSectionLabel);
+    trackSelector.setBounds(trackBar.removeFromLeft(190).reduced(0, 4));
+    trackBar.removeFromLeft(7);
+    instrumentSelector.setBounds(trackBar.removeFromLeft(112).reduced(0, 4));
+    trackBar.removeFromLeft(7);
+    place(trackBar, importAudioButton, 108);
+    place(trackBar, renameTrackButton, 78);
+    place(trackBar, duplicateTrackButton, 88);
+    place(trackBar, deleteTrackButton, 74);
+    place(trackBar, armButton, 34);
+    place(trackBar, muteButton, 34);
+    place(trackBar, soloButton, 34);
+    trackVolumeSlider.setBounds(trackBar.removeFromLeft(174).reduced(0, 4));
+    trackBar.removeFromLeft(7);
+    trackPanSlider.setBounds(trackBar.removeFromLeft(154).reduced(0, 4));
 
-    auto clipBar = area.removeFromTop(44);
-    duplicateClipButton.setBounds(clipBar.removeFromLeft(118).reduced(0, 5));
-    clipBar.removeFromLeft(8);
-    deleteClipButton.setBounds(clipBar.removeFromLeft(92).reduced(0, 5));
-    clipBar.removeFromLeft(8);
-    splitClipButton.setBounds(clipBar.removeFromLeft(64).reduced(0, 5));
-    clipBar.removeFromLeft(8);
-    fadeInButton.setBounds(clipBar.removeFromLeft(76).reduced(0, 5));
-    clipBar.removeFromLeft(8);
-    fadeOutButton.setBounds(clipBar.removeFromLeft(84).reduced(0, 5));
-    clipBar.removeFromLeft(8);
-    quantizeMidiButton.setBounds(clipBar.removeFromLeft(84).reduced(0, 5));
-    clipBar.removeFromLeft(8);
-    snapButton.setBounds(clipBar.removeFromLeft(98).reduced(0, 5));
-    clipBar.removeFromLeft(8);
-    aiChordsButton.setBounds(clipBar.removeFromLeft(92).reduced(0, 5));
-    clipBar.removeFromLeft(8);
-    aiBassButton.setBounds(clipBar.removeFromLeft(78).reduced(0, 5));
-    clipBar.removeFromLeft(8);
-    aiArpButton.setBounds(clipBar.removeFromLeft(72).reduced(0, 5));
-    clipBar.removeFromLeft(8);
-    aiGuitarButton.setBounds(clipBar.removeFromLeft(84).reduced(0, 5));
+    area.removeFromTop(rowGap);
+    auto clipBar = takeRow(clipSectionLabel);
+    place(clipBar, duplicateClipButton, 112);
+    place(clipBar, deleteClipButton, 88);
+    place(clipBar, splitClipButton, 62);
+    place(clipBar, fadeInButton, 74);
+    place(clipBar, fadeOutButton, 80);
+    place(clipBar, quantizeMidiButton, 82);
+    place(clipBar, snapButton, 96);
+    zoomLabel.setBounds(clipBar.removeFromLeft(44));
+    zoomSlider.setBounds(clipBar.removeFromLeft(170).reduced(0, 4));
+
+    area.removeFromTop(rowGap);
+    auto aiBar = takeRow(aiSectionLabel);
+    place(aiBar, aiChordsButton, 92);
+    place(aiBar, aiBassButton, 78);
+    place(aiBar, aiArpButton, 72);
+    place(aiBar, aiGuitarButton, 84);
+    aiBar.removeFromLeft(12);
+    midiInputLabel.setBounds(aiBar.removeFromLeft(82));
+    midiInputSelector.setBounds(aiBar.removeFromLeft(260).reduced(0, 4));
 
     area.removeFromTop(8);
-    auto bottom = area.removeFromBottom(126);
+    auto bottom = area.removeFromBottom(138);
     timelineViewport.setBounds(area);
 
-    auto midiBar = bottom.removeFromTop(36);
-    midiInputLabel.setBounds(midiBar.removeFromLeft(82));
-    midiInputSelector.setBounds(midiBar.removeFromLeft(260).reduced(0, 4));
-    midiBar.removeFromLeft(16);
-    masterLabel.setBounds(midiBar.removeFromLeft(58));
-    masterVolumeSlider.setBounds(midiBar.removeFromLeft(220).reduced(0, 4));
-    midiBar.removeFromLeft(16);
-    monoButton.setBounds(midiBar.removeFromLeft(64).reduced(0, 5));
-    midiBar.removeFromLeft(16);
-    peakLabel.setBounds(midiBar.removeFromLeft(110));
-    midiBar.removeFromLeft(16);
-    resetPeakButton.setBounds(midiBar.removeFromLeft(90).reduced(0, 5));
-    midiBar.removeFromLeft(16);
-    zoomLabel.setBounds(midiBar.removeFromLeft(48));
-    zoomSlider.setBounds(midiBar.removeFromLeft(160).reduced(0, 4));
+    auto outputBar = bottom.removeFromTop(40);
+    outputSectionLabel.setBounds(outputBar.removeFromLeft(labelWidth));
+    masterLabel.setBounds(outputBar.removeFromLeft(58));
+    masterVolumeSlider.setBounds(outputBar.removeFromLeft(220).reduced(0, 4));
+    outputBar.removeFromLeft(12);
+    place(outputBar, monoButton, 64);
+    peakLabel.setBounds(outputBar.removeFromLeft(120));
+    outputBar.removeFromLeft(8);
+    place(outputBar, resetPeakButton, 96);
 
-    keyboardComponent.setBounds(bottom.reduced(0, 8));
+    auto keyboardArea = bottom;
+    keyboardSectionLabel.setBounds(keyboardArea.removeFromLeft(labelWidth));
+    keyboardComponent.setBounds(keyboardArea.reduced(0, 8));
     updateTimelineSize();
 }
 

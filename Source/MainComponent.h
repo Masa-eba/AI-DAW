@@ -165,6 +165,14 @@ private:
     juce::Viewport timelineViewport;
 
     juce::Label titleLabel;
+    juce::Label projectSectionLabel;
+    juce::Label transportSectionLabel;
+    juce::Label trackSectionLabel;
+    juce::Label clipSectionLabel;
+    juce::Label aiSectionLabel;
+    juce::Label outputSectionLabel;
+    juce::Label keyboardSectionLabel;
+    juce::Label hintLabel;
     juce::Label positionLabel;
     juce::Label bpmLabel;
     juce::Label masterLabel;
@@ -215,6 +223,7 @@ private:
     juce::ComboBox trackSelector;
     juce::ComboBox instrumentSelector;
     juce::ComboBox midiInputSelector;
+    juce::TooltipWindow tooltipWindow { this, 700 };
     std::unique_ptr<juce::FileChooser> fileChooser;
     juce::File currentProjectFile;
     juce::Array<juce::MidiDeviceInfo> midiDevices;

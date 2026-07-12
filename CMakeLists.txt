@@ -28,8 +28,6 @@ target_sources(MiniDAW
         Source/Main.cpp
         Source/MainComponent.cpp
         Source/AudioEngine.cpp
-        Source/WaveformComponent.cpp
-        Source/TimeFormatter.cpp
         Source/Core/ProjectModel.cpp
         Source/Core/TempoMap.cpp
         Source/Audio/AudioTrack.cpp
@@ -39,7 +37,8 @@ target_sources(MiniDAW
         Source/Midi/MidiInputManager.cpp
         Source/Midi/SimpleSynth.cpp
         Source/UI/TimelineComponent.cpp
-        Source/UI/PianoRollComponent.cpp)
+        Source/UI/PianoRollComponent.cpp
+        Source/Utils/TimeFormatter.cpp)
 
 target_include_directories(MiniDAW
     PRIVATE
