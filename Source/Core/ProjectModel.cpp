@@ -59,6 +59,38 @@ TrackId ProjectModel::duplicateTrack(const TrackId& trackId)
     return {};
 }
 
+bool ProjectModel::moveTrack(const TrackId& trackId, int direction)
+{
+    if (direction == 0)
+        return false;
+
+    const auto moveInList = [&trackId, direction](auto& tracks)
+    {
+        const auto current = std::find_if(tracks.begin(), tracks.end(),
+                                          [&trackId](const auto& track)
+                                          {
+                                              return track->state.id == trackId;
+                                          });
+
+        if (current == tracks.end())
+            return false;
+
+        const auto currentIndex = std::distance(tracks.begin(), current);
+        const auto targetIndex = currentIndex + (direction < 0 ? -1 : 1);
+
+        if (targetIndex < 0 || targetIndex >= static_cast<decltype(targetIndex)>(tracks.size()))
+            return false;
+
+        std::iter_swap(current, tracks.begin() + targetIndex);
+        return true;
+    };
+
+    if (moveInList(audioTracks))
+        return true;
+
+    return moveInList(midiTracks);
+}
+
 bool ProjectModel::removeTrack(const TrackId& trackId)
 {
     const auto removeAudio = std::remove_if(audioTracks.begin(), audioTracks.end(),

@@ -44,6 +44,7 @@ private:
     void newProject();
     void panicAllNotes();
     void renameSelectedTrack();
+    void moveSelectedTrack(int direction);
     void loopSelectedClip();
     void movePlayheadByGrid(int direction, bool byBar);
     void importAudioToSelectedTrack();
@@ -63,6 +64,7 @@ private:
     void openProject();
     void showErrorMessage(const juce::String& title, const juce::String& message);
     void showInfoMessage(const juce::String& title, const juce::String& message);
+    void selectTrackById(const TrackId& trackId);
     TrackSelection getSelectedTrack() const;
     std::optional<int> getComputerKeyboardNoteForKey(int keyCode) const;
 

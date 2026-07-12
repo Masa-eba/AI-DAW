@@ -73,6 +73,13 @@ TrackId AudioEngine::duplicateTrack(const TrackId& trackId)
     return projectModel.duplicateTrack(trackId);
 }
 
+bool AudioEngine::moveTrack(const TrackId& trackId, int direction)
+{
+    std::scoped_lock lock(modelMutex);
+    saveUndoSnapshotNoLock();
+    return projectModel.moveTrack(trackId, direction);
+}
+
 bool AudioEngine::removeTrack(const TrackId& trackId)
 {
     std::scoped_lock lock(modelMutex);

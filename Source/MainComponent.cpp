@@ -598,6 +598,22 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
         return true;
     }
 
+    if (key.getModifiers().isAltDown()
+        && key.getModifiers().isShiftDown()
+        && key.getKeyCode() == juce::KeyPress::upKey)
+    {
+        moveSelectedTrack(-1);
+        return true;
+    }
+
+    if (key.getModifiers().isAltDown()
+        && key.getModifiers().isShiftDown()
+        && key.getKeyCode() == juce::KeyPress::downKey)
+    {
+        moveSelectedTrack(1);
+        return true;
+    }
+
     if (key.getKeyCode() == juce::KeyPress::deleteKey
         || key.getKeyCode() == juce::KeyPress::backspaceKey)
     {
@@ -821,6 +837,19 @@ void MainComponent::panicAllNotes()
 
     activeComputerKeyboardNotes.clear();
     audioEngine.panic();
+}
+
+void MainComponent::moveSelectedTrack(int direction)
+{
+    const auto selected = getSelectedTrack();
+
+    if (! audioEngine.moveTrack(selected.id, direction))
+        return;
+
+    refreshTrackSelector();
+    selectTrackById(selected.id);
+    updateTimelineSize();
+    timelineComponent.repaint();
 }
 
 void MainComponent::movePlayheadByGrid(int direction, bool byBar)
@@ -1358,6 +1387,36 @@ void MainComponent::showErrorMessage(const juce::String& title, const juce::Stri
 void MainComponent::showInfoMessage(const juce::String& title, const juce::String& message)
 {
     juce::AlertWindow::showMessageBoxAsync(juce::AlertWindow::InfoIcon, title, message);
+}
+
+void MainComponent::selectTrackById(const TrackId& trackId)
+{
+    const auto& model = audioEngine.getProjectModel();
+    auto index = 0;
+
+    for (const auto& track : model.getAudioTracks())
+    {
+        if (track->state.id == trackId)
+        {
+            trackSelector.setSelectedItemIndex(index, juce::dontSendNotification);
+            updateSelectedTrackControls();
+            return;
+        }
+
+        ++index;
+    }
+
+    for (const auto& track : model.getMidiTracks())
+    {
+        if (track->state.id == trackId)
+        {
+            trackSelector.setSelectedItemIndex(index, juce::dontSendNotification);
+            updateSelectedTrackControls();
+            return;
+        }
+
+        ++index;
+    }
 }
 
 MainComponent::TrackSelection MainComponent::getSelectedTrack() const

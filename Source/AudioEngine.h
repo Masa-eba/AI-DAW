@@ -31,6 +31,7 @@ public:
     TrackId addAudioTrack();
     TrackId addMidiTrack();
     TrackId duplicateTrack(const TrackId& trackId);
+    bool moveTrack(const TrackId& trackId, int direction);
     bool removeTrack(const TrackId& trackId);
     void newProject();
     bool loadFile(const juce::File& file);
