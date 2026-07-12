@@ -1282,6 +1282,59 @@ bool AudioEngine::transposeMidiClip(const TrackId& trackId, const juce::Uuid& cl
     return false;
 }
 
+bool AudioEngine::invertMidiClip(const TrackId& trackId, const juce::Uuid& clipId)
+{
+    std::scoped_lock lock(modelMutex);
+    saveUndoSnapshotNoLock();
+
+    if (auto* track = projectModel.findMidiTrack(trackId))
+        for (auto& clip : track->clips)
+            if (clip.id == clipId)
+            {
+                auto noteSum = 0;
+                auto noteCount = 0;
+
+                for (auto i = 0; i < clip.sequence.getNumEvents(); ++i)
+                {
+                    const auto* event = clip.sequence.getEventPointer(i);
+
+                    if (event == nullptr || ! event->message.isNoteOn())
+                        continue;
+
+                    noteSum += event->message.getNoteNumber();
+                    ++noteCount;
+                }
+
+                if (noteCount == 0)
+                    return false;
+
+                const auto pivot = static_cast<double>(noteSum) / static_cast<double>(noteCount);
+
+                for (auto i = 0; i < clip.sequence.getNumEvents(); ++i)
+                {
+                    auto* event = clip.sequence.getEventPointer(i);
+
+                    if (event == nullptr)
+                        continue;
+
+                    auto message = event->message;
+
+                    if (! message.isNoteOnOrOff())
+                        continue;
+
+                    const auto invertedNote = static_cast<int>(std::round((2.0 * pivot)
+                                                                          - static_cast<double>(message.getNoteNumber())));
+                    message.setNoteNumber(juce::jlimit(0, 127, invertedNote));
+                    event->message = message;
+                }
+
+                clip.sequence.updateMatchedPairs();
+                return true;
+            }
+
+    return false;
+}
+
 bool AudioEngine::addMidiClipOctaveLayer(const TrackId& trackId, const juce::Uuid& clipId, int semitones)
 {
     if (semitones == 0)

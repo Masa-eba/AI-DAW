@@ -95,6 +95,7 @@ private:
     void quantizeSelectedMidiClip();
     void swingQuantizeSelectedMidiClip();
     void transposeSelectedMidiClip(int semitones);
+    void invertSelectedMidiClip();
     void layerSelectedMidiClipOctave(int semitones);
     void adjustSelectedMidiClipVelocity(float delta);
     void setSelectedMidiClipVelocity(float velocity);

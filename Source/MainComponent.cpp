@@ -702,6 +702,14 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
     }
 
     if (key.getModifiers().isCommandDown()
+        && key.getModifiers().isShiftDown()
+        && key.getKeyCode() == 'i')
+    {
+        invertSelectedMidiClip();
+        return true;
+    }
+
+    if (key.getModifiers().isCommandDown()
         && key.getModifiers().isAltDown()
         && key.getKeyCode() == 'i')
     {
@@ -2520,6 +2528,25 @@ void MainComponent::transposeSelectedMidiClip(int semitones)
     if (! audioEngine.transposeMidiClip(selectedMidiClip->first, selectedMidiClip->second, semitones))
     {
         showErrorMessage("Transpose failed", "The selected MIDI clip could not be transposed.");
+        return;
+    }
+
+    timelineComponent.repaint();
+}
+
+void MainComponent::invertSelectedMidiClip()
+{
+    const auto selectedMidiClip = timelineComponent.getSelectedMidiClip();
+
+    if (! selectedMidiClip.has_value())
+    {
+        showErrorMessage("No MIDI clip selected", "Select a MIDI clip before inverting notes.");
+        return;
+    }
+
+    if (! audioEngine.invertMidiClip(selectedMidiClip->first, selectedMidiClip->second))
+    {
+        showErrorMessage("Invert failed", "The selected MIDI clip could not be inverted.");
         return;
     }
 
