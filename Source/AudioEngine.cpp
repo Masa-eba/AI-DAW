@@ -364,6 +364,22 @@ bool AudioEngine::isLoopEnabled() const
     return loopEnabled.load();
 }
 
+std::optional<std::pair<double, double>> AudioEngine::getLoopRange() const
+{
+    const auto startSeconds = loopStartSeconds.load();
+    const auto endSeconds = loopEndSeconds.load();
+
+    if (! loopEnabled.load()
+        || ! std::isfinite(startSeconds)
+        || ! std::isfinite(endSeconds)
+        || endSeconds <= startSeconds)
+    {
+        return std::nullopt;
+    }
+
+    return std::make_pair(startSeconds, endSeconds);
+}
+
 bool AudioEngine::isPlaying() const
 {
     const auto state = transportState.load();
@@ -720,6 +736,53 @@ std::optional<juce::Uuid> AudioEngine::duplicateAudioClipToTrackAtTime(const Tra
     }
 
     return std::nullopt;
+}
+
+int AudioEngine::repeatAudioClipUntilTime(const TrackId& trackId,
+                                          const juce::Uuid& clipId,
+                                          double endTimeSeconds)
+{
+    if (! std::isfinite(endTimeSeconds))
+        return 0;
+
+    std::scoped_lock lock(modelMutex);
+
+    auto* track = projectModel.findAudioTrack(trackId);
+
+    if (track == nullptr)
+        return 0;
+
+    const auto clipIterator = std::find_if(track->clips.begin(),
+                                           track->clips.end(),
+                                           [&clipId](const AudioClip& clip)
+                                           {
+                                               return clip.id == clipId;
+                                           });
+
+    if (clipIterator == track->clips.end() || clipIterator->lengthSeconds <= 0.0)
+        return 0;
+
+    const auto sourceClip = *clipIterator;
+    auto nextStart = sourceClip.startTimeSeconds + sourceClip.lengthSeconds;
+    auto addedCount = 0;
+
+    if (nextStart >= endTimeSeconds - 0.001)
+        return 0;
+
+    saveUndoSnapshotNoLock();
+
+    while (nextStart < endTimeSeconds - 0.001 && addedCount < 512)
+    {
+        auto duplicate = sourceClip;
+        duplicate.id = juce::Uuid();
+        duplicate.startTimeSeconds = nextStart;
+        track->clips.push_back(duplicate);
+
+        nextStart += sourceClip.lengthSeconds;
+        ++addedCount;
+    }
+
+    return addedCount;
 }
 
 bool AudioEngine::deleteAudioClip(const TrackId& trackId, const juce::Uuid& clipId)
@@ -1096,6 +1159,53 @@ std::optional<juce::Uuid> AudioEngine::duplicateMidiClipToTrackAtBeat(const Trac
     }
 
     return std::nullopt;
+}
+
+int AudioEngine::repeatMidiClipUntilBeat(const TrackId& trackId,
+                                         const juce::Uuid& clipId,
+                                         double endBeat)
+{
+    if (! std::isfinite(endBeat))
+        return 0;
+
+    std::scoped_lock lock(modelMutex);
+
+    auto* track = projectModel.findMidiTrack(trackId);
+
+    if (track == nullptr)
+        return 0;
+
+    const auto clipIterator = std::find_if(track->clips.begin(),
+                                           track->clips.end(),
+                                           [&clipId](const MidiClip& clip)
+                                           {
+                                               return clip.id == clipId;
+                                           });
+
+    if (clipIterator == track->clips.end() || clipIterator->lengthBeats <= 0.0)
+        return 0;
+
+    const auto sourceClip = *clipIterator;
+    auto nextStart = sourceClip.startBeat + sourceClip.lengthBeats;
+    auto addedCount = 0;
+
+    if (nextStart >= endBeat - 0.001)
+        return 0;
+
+    saveUndoSnapshotNoLock();
+
+    while (nextStart < endBeat - 0.001 && addedCount < 512)
+    {
+        auto duplicate = sourceClip;
+        duplicate.id = juce::Uuid();
+        duplicate.startBeat = nextStart;
+        track->clips.push_back(duplicate);
+
+        nextStart += sourceClip.lengthBeats;
+        ++addedCount;
+    }
+
+    return addedCount;
 }
 
 bool AudioEngine::deleteMidiClip(const TrackId& trackId, const juce::Uuid& clipId)

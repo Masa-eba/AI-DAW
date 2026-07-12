@@ -108,6 +108,7 @@ private:
     void duplicateSelectedClipAtPlayhead();
     void duplicateSelectedClipAtNextBar();
     void duplicateSelectedClipAfterItself();
+    void repeatSelectedClipToLoopEnd();
     void toggleSelectedClipMute();
     void deleteSelectedClip();
     void splitSelectedClip();

@@ -10,6 +10,7 @@
 #include <atomic>
 #include <mutex>
 #include <optional>
+#include <utility>
 #include <vector>
 
 enum class TransportState
@@ -66,6 +67,7 @@ public:
     void setLoopRange(double startSeconds, double endSeconds);
     void clearLoopRange();
     bool isLoopEnabled() const;
+    std::optional<std::pair<double, double>> getLoopRange() const;
     bool isPlaying() const;
     bool isRecording() const;
     bool hasLoadedFile() const;
@@ -101,6 +103,9 @@ public:
                                                               const TrackId& destinationTrackId,
                                                               const juce::Uuid& clipId,
                                                               double startTimeSeconds);
+    int repeatAudioClipUntilTime(const TrackId& trackId,
+                                 const juce::Uuid& clipId,
+                                 double endTimeSeconds);
     bool deleteAudioClip(const TrackId& trackId, const juce::Uuid& clipId);
     bool splitAudioClipAtPosition(const TrackId& trackId, const juce::Uuid& clipId, double positionSeconds);
     bool setAudioClipFade(const TrackId& trackId,
@@ -127,6 +132,9 @@ public:
                                                              const TrackId& destinationTrackId,
                                                              const juce::Uuid& clipId,
                                                              double startBeat);
+    int repeatMidiClipUntilBeat(const TrackId& trackId,
+                                const juce::Uuid& clipId,
+                                double endBeat);
     bool deleteMidiClip(const TrackId& trackId, const juce::Uuid& clipId);
     bool splitMidiClipAtBeat(const TrackId& trackId, const juce::Uuid& clipId, double splitBeat);
     bool quantizeMidiClip(const TrackId& trackId, const juce::Uuid& clipId, double gridBeats);

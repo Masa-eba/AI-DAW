@@ -726,6 +726,16 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
 
     if (key.getModifiers().isCommandDown()
         && key.getModifiers().isAltDown()
+        && key.getModifiers().isShiftDown()
+        && key.getKeyCode() == 'p')
+    {
+        repeatSelectedClipToLoopEnd();
+        return true;
+    }
+
+    if (key.getModifiers().isCommandDown()
+        && key.getModifiers().isAltDown()
+        && ! key.getModifiers().isShiftDown()
         && key.getKeyCode() == 'p')
     {
         duplicateSelectedClipAfterItself();
@@ -2722,6 +2732,56 @@ void MainComponent::duplicateSelectedClipAfterItself()
     }
 
     showErrorMessage("No clip selected", "Select an audio or MIDI clip before duplicating it after itself.");
+}
+
+void MainComponent::repeatSelectedClipToLoopEnd()
+{
+    const auto loopRange = audioEngine.getLoopRange();
+
+    if (! loopRange.has_value())
+    {
+        showErrorMessage("No loop range", "Set a loop range before repeating a clip to the loop end.");
+        return;
+    }
+
+    if (const auto selectedClip = timelineComponent.getSelectedAudioClip())
+    {
+        const auto addedCount = audioEngine.repeatAudioClipUntilTime(selectedClip->first,
+                                                                     selectedClip->second,
+                                                                     loopRange->second);
+
+        if (addedCount <= 0)
+        {
+            showInfoMessage("Repeat skipped", "The selected audio clip already reaches the loop end.");
+            return;
+        }
+
+        updateTimelineSize();
+        updateTransportDisplay();
+        timelineComponent.repaint();
+        return;
+    }
+
+    if (const auto selectedMidiClip = timelineComponent.getSelectedMidiClip())
+    {
+        const auto endBeat = audioEngine.getProjectModel().getTempoMap().secondsToBeats(loopRange->second);
+        const auto addedCount = audioEngine.repeatMidiClipUntilBeat(selectedMidiClip->first,
+                                                                    selectedMidiClip->second,
+                                                                    endBeat);
+
+        if (addedCount <= 0)
+        {
+            showInfoMessage("Repeat skipped", "The selected MIDI clip already reaches the loop end.");
+            return;
+        }
+
+        updateTimelineSize();
+        updateTransportDisplay();
+        timelineComponent.repaint();
+        return;
+    }
+
+    showErrorMessage("No clip selected", "Select an audio or MIDI clip before repeating it to the loop end.");
 }
 
 void MainComponent::toggleSelectedClipMute()
