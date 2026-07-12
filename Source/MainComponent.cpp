@@ -2,6 +2,8 @@
 
 #include "TimeFormatter.h"
 
+#include <cmath>
+
 MainComponent::MainComponent()
     : keyboardComponent(keyboardState, juce::MidiKeyboardComponent::horizontalKeyboard),
       midiInputManager(keyboardState)
@@ -584,6 +586,18 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
         return true;
     }
 
+    if (key.getModifiers().isAltDown() && key.getKeyCode() == juce::KeyPress::leftKey)
+    {
+        movePlayheadByGrid(-1, key.getModifiers().isShiftDown());
+        return true;
+    }
+
+    if (key.getModifiers().isAltDown() && key.getKeyCode() == juce::KeyPress::rightKey)
+    {
+        movePlayheadByGrid(1, key.getModifiers().isShiftDown());
+        return true;
+    }
+
     if (key.getKeyCode() == juce::KeyPress::deleteKey
         || key.getKeyCode() == juce::KeyPress::backspaceKey)
     {
@@ -807,6 +821,27 @@ void MainComponent::panicAllNotes()
 
     activeComputerKeyboardNotes.clear();
     audioEngine.panic();
+}
+
+void MainComponent::movePlayheadByGrid(int direction, bool byBar)
+{
+    if (direction == 0)
+        return;
+
+    const auto& tempo = audioEngine.getProjectModel().getTempoMap();
+    const auto currentBeats = tempo.secondsToBeats(audioEngine.getPosition());
+    const auto stepBeats = byBar ? static_cast<double>(tempo.getNumerator()) : 1.0;
+    const auto epsilon = 1.0e-6;
+    double targetBeats = 0.0;
+
+    if (direction > 0)
+        targetBeats = (std::floor(currentBeats / stepBeats + epsilon) + 1.0) * stepBeats;
+    else
+        targetBeats = juce::jmax(0.0, (std::ceil(currentBeats / stepBeats - epsilon) - 1.0) * stepBeats);
+
+    audioEngine.setPosition(tempo.beatsToSeconds(targetBeats));
+    updateTransportDisplay();
+    timelineComponent.setPosition(audioEngine.getPosition());
 }
 
 void MainComponent::renameSelectedTrack()

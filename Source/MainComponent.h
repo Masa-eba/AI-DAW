@@ -45,6 +45,7 @@ private:
     void panicAllNotes();
     void renameSelectedTrack();
     void loopSelectedClip();
+    void movePlayheadByGrid(int direction, bool byBar);
     void importAudioToSelectedTrack();
     void nudgeSelectedClip(int direction);
     void adjustSelectedAudioClipGain(float delta);
