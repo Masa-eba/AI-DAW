@@ -492,6 +492,18 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
         return true;
     }
 
+    if (key.getModifiers().isCommandDown() && key.getKeyCode() == ']')
+    {
+        adjustSelectedMidiClipVelocity(0.1f);
+        return true;
+    }
+
+    if (key.getModifiers().isCommandDown() && key.getKeyCode() == '[')
+    {
+        adjustSelectedMidiClipVelocity(-0.1f);
+        return true;
+    }
+
     if (key.getKeyCode() == juce::KeyPress::deleteKey
         || key.getKeyCode() == juce::KeyPress::backspaceKey)
     {
@@ -932,6 +944,25 @@ void MainComponent::transposeSelectedMidiClip(int semitones)
     if (! audioEngine.transposeMidiClip(selectedMidiClip->first, selectedMidiClip->second, semitones))
     {
         showErrorMessage("Transpose failed", "The selected MIDI clip could not be transposed.");
+        return;
+    }
+
+    timelineComponent.repaint();
+}
+
+void MainComponent::adjustSelectedMidiClipVelocity(float delta)
+{
+    const auto selectedMidiClip = timelineComponent.getSelectedMidiClip();
+
+    if (! selectedMidiClip.has_value())
+    {
+        showErrorMessage("No MIDI clip selected", "Select a MIDI clip before changing velocity.");
+        return;
+    }
+
+    if (! audioEngine.adjustMidiClipVelocity(selectedMidiClip->first, selectedMidiClip->second, delta))
+    {
+        showErrorMessage("Velocity edit failed", "The selected MIDI clip velocity could not be changed.");
         return;
     }
 
