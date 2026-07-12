@@ -2,7 +2,7 @@
 
 AI-DAWは、C++20、JUCE、CMakeで開発しているmacOS向けのネイティブDTMアプリです。
 
-現在のDTM版MVPでは、複数のAudio/MIDIトラック、BPM、タイムライン、メトロノーム、画面鍵盤、簡易シンセ、録音、ミックス/Stem WAV書き出し、プロジェクト保存の基礎を実装しています。
+現在のDTM版MVPでは、複数のAudio/MIDIトラック、BPM、タイムライン、メトロノーム、画面鍵盤、簡易シンセ、録音、クリップ編集、ローカルAI MIDI生成、ミックス/Stem WAV書き出し、プロジェクト保存の基礎を実装しています。
 
 ## 機能
 
@@ -163,30 +163,36 @@ open build/MiniDAW_artefacts/AI-DAW.app
 14. `Duplicate Clip` / `Delete Clip`でAudioClipを編集
 15. `Fade In` / `Fade Out`で1秒フェードを適用
 16. `Command + = / -`で選択中AudioClipのClip Gainを上下
-17. `AI Chords`で選択中MIDIトラックへコード進行を生成
-18. `AI Bass`で選択中MIDIトラックへベースラインを生成
-19. `AI Arp`で選択中MIDIトラックへアルペジオを生成
-20. MidiClipを掴んでタイムライン上または別MIDIトラックへ移動
-21. MidiClipの右端をドラッグして長さを変更
-22. `Duplicate Clip` / `Delete Clip`でMidiClipを編集
-23. `Quantize`で選択中MidiClipを現在のスナップグリッドへ揃える
-24. `Command + ↑ / ↓`で選択中MidiClipをオクターブ上下に移調
-25. `Command + ] / [`で選択中MidiClipのVelocityを上下
-26. `Zoom`でタイムラインの横方向表示倍率を調整
-27. `Command + ← / →`で選択中Clipを現在のスナップグリッド単位で左右へ移動
-28. `Command + J`で選択中Clipを再生位置へ移動
-29. `Option + ← / →`で再生位置を前後の拍へ移動
-30. `Option + Shift + ← / →`で再生位置を前後の小節へ移動
-31. `Option + M`で現在位置にマーカーを追加
-32. `Option + Shift + M`で再生位置付近のマーカー名を変更
-33. `Option + Delete`で再生位置付近のマーカーを削除
-34. `Option + , / .`で前後のマーカーへ移動
-35. `M / S / Volume / Pan`でトラックを調整
-36. `Loop Clip`で選択中AudioClip / MidiClipの範囲を繰り返し再生
-37. `Loop`でプロジェクト長の範囲を繰り返し再生
-38. `Panic`または`Esc`で鳴りっぱなしのMIDIノートを停止
-39. `Export Mix`でミックス結果を書き出す
-40. `Export Track`で選択トラックだけをStemとして書き出す
+17. `Command + C / V`で選択中AudioClip / MidiClipをコピーし、再生位置へペースト
+18. `Loop Clip`で選択中AudioClip / MidiClipの範囲を繰り返し再生
+19. `Command + Option + Shift + P`で選択中Clipを現在のループ範囲終端まで反復複製
+20. `AI Chords`で選択中MIDIトラックへコード進行を生成
+21. `AI Bass`で選択中MIDIトラックへベースラインを生成
+22. `AI Arp`で選択中MIDIトラックへアルペジオを生成
+23. `Command + Option + U`で選択中MIDIトラックへドラムパターンを生成
+24. `Command + Option + Y`で選択中MIDIトラックへリードメロディを生成
+25. MidiClipを掴んでタイムライン上または別MIDIトラックへ移動
+26. MidiClipの右端をドラッグして長さを変更
+27. `Duplicate Clip` / `Delete Clip`でMidiClipを編集
+28. `Quantize`で選択中MidiClipを現在のスナップグリッドへ揃える
+29. `Command + ↑ / ↓`で選択中MidiClipをオクターブ上下に移調
+30. `Command + ] / [`で選択中MidiClipのVelocityを上下
+31. `Command + Option + Shift + [ / ]`で選択中MidiClipをDouble-time / Half-timeに変換
+32. `Zoom`でタイムラインの横方向表示倍率を調整
+33. `Command + ← / →`で選択中Clipを現在のスナップグリッド単位で左右へ移動
+34. `Command + J`で選択中Clipを再生位置へ移動
+35. `Option + ← / →`で再生位置を前後の拍へ移動
+36. `Option + Shift + ← / →`で再生位置を前後の小節へ移動
+37. `Option + M`で現在位置にマーカーを追加
+38. `Command + Option + M`で選択中Clipの先頭にマーカーを追加
+39. `Option + Shift + M`で再生位置付近のマーカー名を変更
+40. `Option + Delete`で再生位置付近のマーカーを削除
+41. `Option + , / .`で前後のマーカーへ移動
+42. `M / S / Volume / Pan`でトラックを調整
+43. `Loop`でプロジェクト長の範囲を繰り返し再生
+44. `Panic`または`Esc`で鳴りっぱなしのMIDIノートを停止
+45. `Export Mix`でミックス結果を書き出す
+46. `Export Track`で選択トラックだけをStemとして書き出す
 
 ## プロジェクト保存
 
@@ -352,8 +358,8 @@ AI-DAW/
 ## 現在の制限
 
 - ピアノロール編集は未実装
-- AudioClip編集はSplit、左右端トリム、複製、削除、1秒フェード、Clip Gainなどに対応
-- MidiClip編集は移動、右端トリム、Split、複製、削除、グリッドクオンタイズ、移調、Velocity調整、Humanize、Legato / Staccatoに対応
+- AudioClip編集はSplit、左右端トリム、複製、コピー/ペースト、削除、Fade、Clip Gain、Normalize、Reverseなどに対応
+- MidiClip編集は移動、右端トリム、Split、複製、コピー/ペースト、削除、グリッドクオンタイズ、移調、Velocity調整、Humanize、Legato / Staccato、Double-time / Half-timeに対応
 - Audioタイムストレッチは未実装
 - VST / AUプラグインには未対応
 - MIDI CC編集は未実装
