@@ -607,6 +607,14 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
         return true;
     }
 
+    if (key.getModifiers().isCommandDown()
+        && key.getModifiers().isShiftDown()
+        && key.getKeyCode() == 'l')
+    {
+        legatoSelectedMidiClip();
+        return true;
+    }
+
     if (key.getModifiers().isCommandDown() && key.getKeyCode() == juce::KeyPress::upKey)
     {
         transposeSelectedMidiClip(12);
@@ -1655,6 +1663,25 @@ void MainComponent::humanizeSelectedMidiClipVelocity()
     if (! audioEngine.humanizeMidiClipVelocity(selectedMidiClip->first, selectedMidiClip->second, 0.08f))
     {
         showErrorMessage("Humanize failed", "The selected MIDI clip velocity could not be humanized.");
+        return;
+    }
+
+    timelineComponent.repaint();
+}
+
+void MainComponent::legatoSelectedMidiClip()
+{
+    const auto selectedMidiClip = timelineComponent.getSelectedMidiClip();
+
+    if (! selectedMidiClip.has_value())
+    {
+        showErrorMessage("No MIDI clip selected", "Select a MIDI clip before applying legato.");
+        return;
+    }
+
+    if (! audioEngine.legatoMidiClip(selectedMidiClip->first, selectedMidiClip->second))
+    {
+        showErrorMessage("Legato failed", "The selected MIDI clip could not be made legato.");
         return;
     }
 
