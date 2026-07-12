@@ -628,6 +628,23 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
         return true;
     }
 
+    if (key.getModifiers().isCommandDown()
+        && key.getModifiers().isAltDown()
+        && key.getModifiers().isShiftDown()
+        && key.getKeyCode() == 'e')
+    {
+        exportSelectedTrack();
+        return true;
+    }
+
+    if (key.getModifiers().isCommandDown()
+        && key.getModifiers().isAltDown()
+        && key.getKeyCode() == 'e')
+    {
+        exportMix();
+        return true;
+    }
+
     if (key.getModifiers().isCommandDown() && key.getKeyCode() == 'd')
     {
         if (key.getModifiers().isShiftDown())

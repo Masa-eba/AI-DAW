@@ -186,6 +186,8 @@ open build/MiniDAW_artefacts/AI-DAW.app
 - `Command + O`: プロジェクトを開く
 - `Command + S`: プロジェクトを保存
 - `Command + Shift + S`: 名前を付けてプロジェクトを保存
+- `Command + Option + E`: ミックスを書き出し
+- `Command + Option + Shift + E`: 選択トラックをStemとして書き出し
 - `Command + Z`: Undo
 - `Command + Shift + Z`: Redo
 - `Command + Shift + A`: 全トラックのRecord Armを解除
