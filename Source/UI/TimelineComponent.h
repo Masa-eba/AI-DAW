@@ -23,6 +23,8 @@ public:
     bool isSnapEnabled() const;
     std::optional<std::pair<TrackId, juce::Uuid>> getSelectedAudioClip() const;
     std::optional<std::pair<TrackId, juce::Uuid>> getSelectedMidiClip() const;
+    void selectAudioClip(const TrackId& trackId, const juce::Uuid& clipId);
+    void selectMidiClip(const TrackId& trackId, const juce::Uuid& clipId);
     bool selectAdjacentClip(int direction);
     bool selectClipAtTime(double seconds, std::optional<TrackId> preferredTrackId = std::nullopt);
     void paint(juce::Graphics& graphics) override;

@@ -85,6 +85,20 @@ std::optional<std::pair<TrackId, juce::Uuid>> TimelineComponent::getSelectedMidi
     return selectedMidiClip;
 }
 
+void TimelineComponent::selectAudioClip(const TrackId& trackId, const juce::Uuid& clipId)
+{
+    selectedAudioClip = std::make_pair(trackId, clipId);
+    selectedMidiClip.reset();
+    repaint();
+}
+
+void TimelineComponent::selectMidiClip(const TrackId& trackId, const juce::Uuid& clipId)
+{
+    selectedMidiClip = std::make_pair(trackId, clipId);
+    selectedAudioClip.reset();
+    repaint();
+}
+
 bool TimelineComponent::selectAdjacentClip(int direction)
 {
     if (projectModel == nullptr || direction == 0)

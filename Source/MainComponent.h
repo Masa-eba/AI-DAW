@@ -7,6 +7,7 @@
 #include <JuceHeader.h>
 
 #include <map>
+#include <optional>
 #include <set>
 #include <vector>
 
@@ -26,6 +27,19 @@ public:
     bool keyStateChanged(bool isKeyDown) override;
 
 private:
+    enum class ClipboardClipType
+    {
+        Audio,
+        Midi
+    };
+
+    struct ClipClipboard
+    {
+        TrackId sourceTrackId;
+        juce::Uuid clipId;
+        ClipboardClipType type = ClipboardClipType::Audio;
+    };
+
     struct TrackSelection
     {
         TrackId id;
@@ -88,6 +102,8 @@ private:
     void resetSelectedAudioClipGain();
     void normalizeSelectedAudioClip();
     void toggleSelectedAudioClipReverse();
+    void copySelectedClip();
+    void pasteCopiedClipAtPlayhead();
     void duplicateSelectedClip();
     void duplicateSelectedClipAtPlayhead();
     void duplicateSelectedClipAtNextBar();
@@ -192,6 +208,7 @@ private:
     juce::Array<juce::MidiDeviceInfo> midiDevices;
     std::set<int> activeComputerKeyboardNotes;
     std::vector<double> tapTempoTimes;
+    std::optional<ClipClipboard> clipClipboard;
     int snapGridIndex = 2;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MainComponent)

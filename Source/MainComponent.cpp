@@ -601,6 +601,24 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
     }
 
     if (key.getModifiers().isCommandDown()
+        && ! key.getModifiers().isShiftDown()
+        && ! key.getModifiers().isAltDown()
+        && key.getKeyCode() == 'c')
+    {
+        copySelectedClip();
+        return true;
+    }
+
+    if (key.getModifiers().isCommandDown()
+        && ! key.getModifiers().isShiftDown()
+        && ! key.getModifiers().isAltDown()
+        && key.getKeyCode() == 'v')
+    {
+        pasteCopiedClipAtPlayhead();
+        return true;
+    }
+
+    if (key.getModifiers().isCommandDown()
         && key.getModifiers().isShiftDown()
         && key.getKeyCode() == 's')
     {
@@ -2417,6 +2435,99 @@ void MainComponent::toggleSelectedAudioClipReverse()
     }
 
     timelineComponent.repaint();
+}
+
+void MainComponent::copySelectedClip()
+{
+    if (const auto selectedClip = timelineComponent.getSelectedAudioClip())
+    {
+        if (audioEngine.getProjectModel().findAudioTrack(selectedClip->first) == nullptr)
+        {
+            showErrorMessage("Copy failed", "The selected audio clip track no longer exists.");
+            return;
+        }
+
+        clipClipboard = ClipClipboard { selectedClip->first, selectedClip->second, ClipboardClipType::Audio };
+        return;
+    }
+
+    if (const auto selectedMidiClip = timelineComponent.getSelectedMidiClip())
+    {
+        if (audioEngine.getProjectModel().findMidiTrack(selectedMidiClip->first) == nullptr)
+        {
+            showErrorMessage("Copy failed", "The selected MIDI clip track no longer exists.");
+            return;
+        }
+
+        clipClipboard = ClipClipboard { selectedMidiClip->first, selectedMidiClip->second, ClipboardClipType::Midi };
+        return;
+    }
+
+    showErrorMessage("No clip selected", "Select an audio or MIDI clip before copying.");
+}
+
+void MainComponent::pasteCopiedClipAtPlayhead()
+{
+    if (! clipClipboard.has_value())
+    {
+        showErrorMessage("Clipboard empty", "Copy an audio or MIDI clip before pasting.");
+        return;
+    }
+
+    const auto selectedTrack = getSelectedTrack();
+
+    if (clipClipboard->type == ClipboardClipType::Audio)
+    {
+        auto destinationTrackId = clipClipboard->sourceTrackId;
+
+        if (selectedTrack.type == TrackType::Audio
+            && audioEngine.getProjectModel().findAudioTrack(selectedTrack.id) != nullptr)
+        {
+            destinationTrackId = selectedTrack.id;
+        }
+
+        const auto pastedClipId = audioEngine.duplicateAudioClipToTrackAtTime(clipClipboard->sourceTrackId,
+                                                                              destinationTrackId,
+                                                                              clipClipboard->clipId,
+                                                                              audioEngine.getPosition());
+
+        if (! pastedClipId.has_value())
+        {
+            showErrorMessage("Paste failed", "The copied audio clip could not be pasted.");
+            return;
+        }
+
+        selectTrackById(destinationTrackId);
+        timelineComponent.selectAudioClip(destinationTrackId, *pastedClipId);
+        updateTimelineSize();
+        updateTransportDisplay();
+        return;
+    }
+
+    auto destinationTrackId = clipClipboard->sourceTrackId;
+
+    if (selectedTrack.type == TrackType::Midi
+        && audioEngine.getProjectModel().findMidiTrack(selectedTrack.id) != nullptr)
+    {
+        destinationTrackId = selectedTrack.id;
+    }
+
+    const auto startBeat = audioEngine.getProjectModel().getTempoMap().secondsToBeats(audioEngine.getPosition());
+    const auto pastedClipId = audioEngine.duplicateMidiClipToTrackAtBeat(clipClipboard->sourceTrackId,
+                                                                         destinationTrackId,
+                                                                         clipClipboard->clipId,
+                                                                         startBeat);
+
+    if (! pastedClipId.has_value())
+    {
+        showErrorMessage("Paste failed", "The copied MIDI clip could not be pasted.");
+        return;
+    }
+
+    selectTrackById(destinationTrackId);
+    timelineComponent.selectMidiClip(destinationTrackId, *pastedClipId);
+    updateTimelineSize();
+    updateTransportDisplay();
 }
 
 void MainComponent::duplicateSelectedClip()

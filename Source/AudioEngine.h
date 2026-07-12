@@ -9,6 +9,7 @@
 
 #include <atomic>
 #include <mutex>
+#include <optional>
 #include <vector>
 
 enum class TransportState
@@ -96,6 +97,10 @@ public:
     bool duplicateAudioClipAtTime(const TrackId& trackId,
                                   const juce::Uuid& clipId,
                                   double startTimeSeconds);
+    std::optional<juce::Uuid> duplicateAudioClipToTrackAtTime(const TrackId& sourceTrackId,
+                                                              const TrackId& destinationTrackId,
+                                                              const juce::Uuid& clipId,
+                                                              double startTimeSeconds);
     bool deleteAudioClip(const TrackId& trackId, const juce::Uuid& clipId);
     bool splitAudioClipAtPosition(const TrackId& trackId, const juce::Uuid& clipId, double positionSeconds);
     bool setAudioClipFade(const TrackId& trackId,
@@ -118,6 +123,10 @@ public:
     bool duplicateMidiClipAtBeat(const TrackId& trackId,
                                  const juce::Uuid& clipId,
                                  double startBeat);
+    std::optional<juce::Uuid> duplicateMidiClipToTrackAtBeat(const TrackId& sourceTrackId,
+                                                             const TrackId& destinationTrackId,
+                                                             const juce::Uuid& clipId,
+                                                             double startBeat);
     bool deleteMidiClip(const TrackId& trackId, const juce::Uuid& clipId);
     bool splitMidiClipAtBeat(const TrackId& trackId, const juce::Uuid& clipId, double splitBeat);
     bool quantizeMidiClip(const TrackId& trackId, const juce::Uuid& clipId, double gridBeats);

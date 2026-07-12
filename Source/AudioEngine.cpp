@@ -689,6 +689,39 @@ bool AudioEngine::duplicateAudioClipAtTime(const TrackId& trackId,
     return false;
 }
 
+std::optional<juce::Uuid> AudioEngine::duplicateAudioClipToTrackAtTime(const TrackId& sourceTrackId,
+                                                                       const TrackId& destinationTrackId,
+                                                                       const juce::Uuid& clipId,
+                                                                       double startTimeSeconds)
+{
+    if (! std::isfinite(startTimeSeconds))
+        return std::nullopt;
+
+    std::scoped_lock lock(modelMutex);
+    saveUndoSnapshotNoLock();
+
+    const auto* sourceTrack = projectModel.findAudioTrack(sourceTrackId);
+    auto* destinationTrack = projectModel.findAudioTrack(destinationTrackId);
+
+    if (sourceTrack == nullptr || destinationTrack == nullptr)
+        return std::nullopt;
+
+    for (const auto& clip : sourceTrack->clips)
+    {
+        if (clip.id != clipId)
+            continue;
+
+        auto duplicate = clip;
+        duplicate.id = juce::Uuid();
+        duplicate.startTimeSeconds = juce::jmax(0.0, startTimeSeconds);
+        const auto duplicatedId = duplicate.id;
+        destinationTrack->clips.push_back(duplicate);
+        return duplicatedId;
+    }
+
+    return std::nullopt;
+}
+
 bool AudioEngine::deleteAudioClip(const TrackId& trackId, const juce::Uuid& clipId)
 {
     std::scoped_lock lock(modelMutex);
@@ -1030,6 +1063,39 @@ bool AudioEngine::duplicateMidiClipAtBeat(const TrackId& trackId,
             }
 
     return false;
+}
+
+std::optional<juce::Uuid> AudioEngine::duplicateMidiClipToTrackAtBeat(const TrackId& sourceTrackId,
+                                                                      const TrackId& destinationTrackId,
+                                                                      const juce::Uuid& clipId,
+                                                                      double startBeat)
+{
+    if (! std::isfinite(startBeat))
+        return std::nullopt;
+
+    std::scoped_lock lock(modelMutex);
+    saveUndoSnapshotNoLock();
+
+    const auto* sourceTrack = projectModel.findMidiTrack(sourceTrackId);
+    auto* destinationTrack = projectModel.findMidiTrack(destinationTrackId);
+
+    if (sourceTrack == nullptr || destinationTrack == nullptr)
+        return std::nullopt;
+
+    for (const auto& clip : sourceTrack->clips)
+    {
+        if (clip.id != clipId)
+            continue;
+
+        auto duplicate = clip;
+        duplicate.id = juce::Uuid();
+        duplicate.startBeat = juce::jmax(0.0, startBeat);
+        const auto duplicatedId = duplicate.id;
+        destinationTrack->clips.push_back(duplicate);
+        return duplicatedId;
+    }
+
+    return std::nullopt;
 }
 
 bool AudioEngine::deleteMidiClip(const TrackId& trackId, const juce::Uuid& clipId)
