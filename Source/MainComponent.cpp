@@ -859,6 +859,14 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
         return true;
     }
 
+    if (key.getModifiers().isCommandDown()
+        && key.getModifiers().isAltDown()
+        && key.getKeyCode() == 'v')
+    {
+        setSelectedMidiClipVelocity(0.8f);
+        return true;
+    }
+
     if (key.getModifiers().isCommandDown() && key.getKeyCode() == '=')
     {
         adjustSelectedAudioClipGain(0.1f);
@@ -2224,6 +2232,25 @@ void MainComponent::adjustSelectedMidiClipVelocity(float delta)
     if (! audioEngine.adjustMidiClipVelocity(selectedMidiClip->first, selectedMidiClip->second, delta))
     {
         showErrorMessage("Velocity edit failed", "The selected MIDI clip velocity could not be changed.");
+        return;
+    }
+
+    timelineComponent.repaint();
+}
+
+void MainComponent::setSelectedMidiClipVelocity(float velocity)
+{
+    const auto selectedMidiClip = timelineComponent.getSelectedMidiClip();
+
+    if (! selectedMidiClip.has_value())
+    {
+        showErrorMessage("No MIDI clip selected", "Select a MIDI clip before setting velocity.");
+        return;
+    }
+
+    if (! audioEngine.setMidiClipVelocity(selectedMidiClip->first, selectedMidiClip->second, velocity))
+    {
+        showErrorMessage("Velocity edit failed", "The selected MIDI clip velocity could not be set.");
         return;
     }
 

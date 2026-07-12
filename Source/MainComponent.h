@@ -84,6 +84,7 @@ private:
     void swingQuantizeSelectedMidiClip();
     void transposeSelectedMidiClip(int semitones);
     void adjustSelectedMidiClipVelocity(float delta);
+    void setSelectedMidiClipVelocity(float velocity);
     void humanizeSelectedMidiClipVelocity();
     void humanizeSelectedMidiClipTiming();
     void legatoSelectedMidiClip();

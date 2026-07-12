@@ -225,6 +225,7 @@ open build/MiniDAW_artefacts/AI-DAW.app
 - `Command + ↑ / ↓`: 選択中MidiClipを1オクターブ上下に移調
 - `Command + Shift + ↑ / ↓`: 選択中MidiClipを半音上下に移調
 - `Command + ] / [`：選択中MidiClipのVelocityを上下
+- `Command + Option + V`: 選択中MidiClipのVelocityを80%に統一
 - `Command + Shift + H`: 選択中MidiClipのVelocityをHumanize
 - `Command + Option + H`: 選択中MidiClipのタイミングをHumanize
 - `Command + Shift + L`: 選択中MidiClipのノート長をLegato化

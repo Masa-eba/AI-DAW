@@ -1275,6 +1275,41 @@ bool AudioEngine::adjustMidiClipVelocity(const TrackId& trackId, const juce::Uui
     return false;
 }
 
+bool AudioEngine::setMidiClipVelocity(const TrackId& trackId, const juce::Uuid& clipId, float velocity)
+{
+    if (! std::isfinite(velocity))
+        return false;
+
+    std::scoped_lock lock(modelMutex);
+    saveUndoSnapshotNoLock();
+
+    if (auto* track = projectModel.findMidiTrack(trackId))
+        for (auto& clip : track->clips)
+            if (clip.id == clipId)
+            {
+                const auto safeVelocity = juce::jlimit(0.01f, 1.0f, velocity);
+                auto changed = false;
+
+                for (auto i = 0; i < clip.sequence.getNumEvents(); ++i)
+                {
+                    auto* event = clip.sequence.getEventPointer(i);
+
+                    if (event == nullptr || ! event->message.isNoteOn())
+                        continue;
+
+                    event->message.setVelocity(safeVelocity);
+                    changed = true;
+                }
+
+                if (changed)
+                    clip.sequence.updateMatchedPairs();
+
+                return changed;
+            }
+
+    return false;
+}
+
 bool AudioEngine::humanizeMidiClipVelocity(const TrackId& trackId,
                                            const juce::Uuid& clipId,
                                            float amount)

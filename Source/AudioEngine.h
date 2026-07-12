@@ -124,6 +124,7 @@ public:
                                double swingAmount);
     bool transposeMidiClip(const TrackId& trackId, const juce::Uuid& clipId, int semitones);
     bool adjustMidiClipVelocity(const TrackId& trackId, const juce::Uuid& clipId, float delta);
+    bool setMidiClipVelocity(const TrackId& trackId, const juce::Uuid& clipId, float velocity);
     bool humanizeMidiClipVelocity(const TrackId& trackId, const juce::Uuid& clipId, float amount);
     bool humanizeMidiClipTiming(const TrackId& trackId, const juce::Uuid& clipId, double amountBeats);
     bool legatoMidiClip(const TrackId& trackId, const juce::Uuid& clipId);
