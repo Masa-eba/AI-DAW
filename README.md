@@ -185,7 +185,19 @@ ABE DAWの画面は上から順に機能別に分かれています。
 4. 画面鍵盤、PCキーボード、または外部MIDIキーボードで演奏する
 5. `Record`を押して録音する
 
-### 4. Piano RollでMIDIを編集する
+### 4. マイクでAudio録音する
+
+1. `+ Audio Track`を押す
+2. Audioトラックを選択する
+3. `R`をONにする
+4. macOSのマイク権限ダイアログが出たら許可する
+5. `Record`を押して録音を開始する
+6. もう一度`Record`、または`Stop`を押して録音を終了する
+7. 録音されたAudioClipがタイムライン上に配置される
+
+録音ファイルは一時フォルダ内の`ABE DAW Recordings`へWAVとして作成され、録音終了後にAudioトラックへ読み込まれます。
+
+### 5. Piano RollでMIDIを編集する
 
 1. MidiClipを選択して`Piano Roll`を押す、またはMidiClipをダブルクリックする
 2. 空いている場所をクリックしてノートを追加する
@@ -194,14 +206,14 @@ ABE DAWの画面は上から順に機能別に分かれています。
 5. ノートを右クリックして削除する
 6. Velocityスライダーで強さを変更する
 
-### 5. AI MIDIを作る
+### 6. AI MIDIを作る
 
 1. `+ MIDI Track`を押す
 2. MIDIトラックを選択する
 3. `AI Chords`、`AI Bass`、`AI Arp`、`AI Guitar`、`AI Drums`、`Drum Fill`、`AI Melody`などを押す
 4. 必要ならPiano Rollで編集する
 
-### 6. 書き出す
+### 7. 書き出す
 
 - 全体を書き出す場合は`Export Mix`
 - 選択トラックだけを書き出す場合は`Export Track`

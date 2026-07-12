@@ -2,6 +2,7 @@
 
 #include <JuceHeader.h>
 
+#include <array>
 #include <atomic>
 #include <memory>
 
@@ -20,6 +21,8 @@ public:
 private:
     juce::TimeSliceThread writerThread { "Audio Recorder Writer" };
     std::unique_ptr<juce::AudioFormatWriter::ThreadedWriter> threadedWriter;
+    juce::AudioBuffer<float> writeBuffer;
     juce::File currentFile;
     std::atomic<juce::AudioFormatWriter::ThreadedWriter*> activeWriter { nullptr };
+    int writerChannels = 0;
 };

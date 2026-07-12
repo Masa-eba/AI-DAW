@@ -174,6 +174,7 @@ bool AudioEngine::startRecording()
 
     if (getFirstArmedAudioTrack() != nullptr)
     {
+        audioRecordingStartSeconds = getPosition();
         const auto dir = juce::File::getSpecialLocation(juce::File::tempDirectory)
                              .getChildFile("ABE DAW Recordings");
         dir.createDirectory();
@@ -209,6 +210,10 @@ void AudioEngine::stopRecording()
     {
         saveUndoSnapshotNoLock();
         loadAudioFileIntoTrack(*track, lastRecordingFile);
+
+        if (! track->clips.empty())
+            track->clips.back().startTimeSeconds = audioRecordingStartSeconds;
+
         lastRecordingFile = juce::File();
     }
 

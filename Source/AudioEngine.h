@@ -248,6 +248,7 @@ private:
     std::atomic<double> loopEndSeconds { 0.0 };
     std::atomic<bool> recordingMidi { false };
     juce::MidiMessageSequence activeRecordingSequence;
+    double audioRecordingStartSeconds = 0.0;
     double recordingStartBeats = 0.0;
     std::vector<juce::String> undoStack;
     std::vector<juce::String> redoStack;

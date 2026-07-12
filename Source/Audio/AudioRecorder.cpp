@@ -40,6 +40,9 @@ bool AudioRecorder::startRecording(const juce::File& destination, double sampleR
         writer.release(),
         writerThread,
         32768);
+    writerChannels = numChannels;
+    writeBuffer.setSize(writerChannels, 16384, false, false, true);
+    writeBuffer.clear();
     currentFile = destination;
     activeWriter.store(threadedWriter.get());
     return true;
@@ -49,16 +52,47 @@ void AudioRecorder::stopRecording()
 {
     activeWriter.store(nullptr);
     threadedWriter.reset();
+    writerChannels = 0;
 }
 
 void AudioRecorder::processInput(const float* const* inputChannelData,
                                  int numInputChannels,
                                  int numSamples)
 {
-    if (auto* writer = activeWriter.load())
-        writer->write(inputChannelData, juce::jmax(0, numSamples));
+    auto* writer = activeWriter.load();
 
-    juce::ignoreUnused(numInputChannels);
+    if (writer == nullptr || writerChannels <= 0 || numSamples <= 0)
+        return;
+
+    auto samplesWritten = 0;
+
+    while (samplesWritten < numSamples)
+    {
+        const auto samplesThisBlock = juce::jmin(numSamples - samplesWritten,
+                                                 writeBuffer.getNumSamples());
+        writeBuffer.clear(0, samplesThisBlock);
+
+        for (auto channel = 0; channel < writerChannels; ++channel)
+        {
+            const auto sourceChannel = numInputChannels > 0
+                ? juce::jmin(channel, numInputChannels - 1)
+                : -1;
+            const auto* source = sourceChannel >= 0 && inputChannelData != nullptr
+                ? inputChannelData[sourceChannel]
+                : nullptr;
+
+            if (source != nullptr)
+                writeBuffer.copyFrom(channel, 0, source + samplesWritten, samplesThisBlock);
+        }
+
+        std::array<const float*, 8> channelData {};
+
+        for (auto channel = 0; channel < writerChannels && channel < static_cast<int>(channelData.size()); ++channel)
+            channelData[static_cast<size_t>(channel)] = writeBuffer.getReadPointer(channel);
+
+        writer->write(channelData.data(), samplesThisBlock);
+        samplesWritten += samplesThisBlock;
+    }
 }
 
 bool AudioRecorder::isRecording() const
