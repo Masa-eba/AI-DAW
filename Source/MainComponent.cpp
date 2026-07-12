@@ -99,6 +99,10 @@ MainComponent::MainComponent()
     fadeOutButton.onClick = [this] { fadeOutSelectedClip(); };
     addAndMakeVisible(fadeOutButton);
 
+    quantizeMidiButton.setButtonText("Quantize");
+    quantizeMidiButton.onClick = [this] { quantizeSelectedMidiClip(); };
+    addAndMakeVisible(quantizeMidiButton);
+
     snapButton.setButtonText("Snap");
     snapButton.setClickingTogglesState(true);
     snapButton.setToggleState(true, juce::dontSendNotification);
@@ -414,6 +418,8 @@ void MainComponent::resized()
     clipBar.removeFromLeft(8);
     fadeOutButton.setBounds(clipBar.removeFromLeft(84).reduced(0, 5));
     clipBar.removeFromLeft(8);
+    quantizeMidiButton.setBounds(clipBar.removeFromLeft(84).reduced(0, 5));
+    clipBar.removeFromLeft(8);
     snapButton.setBounds(clipBar.removeFromLeft(62).reduced(0, 5));
     clipBar.removeFromLeft(8);
     aiChordsButton.setBounds(clipBar.removeFromLeft(92).reduced(0, 5));
@@ -447,6 +453,12 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
     if (key.getModifiers().isCommandDown() && key.getKeyCode() == 'e')
     {
         splitSelectedClip();
+        return true;
+    }
+
+    if (key.getModifiers().isCommandDown() && key.getKeyCode() == 'k')
+    {
+        quantizeSelectedMidiClip();
         return true;
     }
 
@@ -794,6 +806,26 @@ void MainComponent::fadeOutSelectedClip()
         showErrorMessage("Fade failed", "The selected audio clip could not be faded.");
 
     timelineComponent.repaint();
+}
+
+void MainComponent::quantizeSelectedMidiClip()
+{
+    const auto selectedMidiClip = timelineComponent.getSelectedMidiClip();
+
+    if (! selectedMidiClip.has_value())
+    {
+        showErrorMessage("No MIDI clip selected", "Select a MIDI clip before quantizing.");
+        return;
+    }
+
+    if (! audioEngine.quantizeMidiClip(selectedMidiClip->first, selectedMidiClip->second, 0.25))
+    {
+        showErrorMessage("Quantize failed", "The selected MIDI clip could not be quantized.");
+        return;
+    }
+
+    timelineComponent.repaint();
+    updateTransportDisplay();
 }
 
 void MainComponent::generateAiChordsForSelectedTrack()

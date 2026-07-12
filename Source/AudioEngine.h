@@ -80,6 +80,7 @@ public:
                              double startBeat);
     bool duplicateMidiClip(const TrackId& trackId, const juce::Uuid& clipId);
     bool deleteMidiClip(const TrackId& trackId, const juce::Uuid& clipId);
+    bool quantizeMidiClip(const TrackId& trackId, const juce::Uuid& clipId, double gridBeats);
     bool generateChordProgression(const TrackId& trackId, const juce::String& style);
 
     void setMidiKeyboardState(juce::MidiKeyboardState* state);

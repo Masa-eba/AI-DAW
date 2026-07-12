@@ -564,6 +564,45 @@ bool AudioEngine::deleteMidiClip(const TrackId& trackId, const juce::Uuid& clipI
     return false;
 }
 
+bool AudioEngine::quantizeMidiClip(const TrackId& trackId, const juce::Uuid& clipId, double gridBeats)
+{
+    if (! std::isfinite(gridBeats) || gridBeats <= 0.0)
+        return false;
+
+    std::scoped_lock lock(modelMutex);
+
+    if (auto* track = projectModel.findMidiTrack(trackId))
+        for (auto& clip : track->clips)
+            if (clip.id == clipId)
+            {
+                for (auto i = 0; i < clip.sequence.getNumEvents(); ++i)
+                {
+                    auto* event = clip.sequence.getEventPointer(i);
+
+                    if (event == nullptr)
+                        continue;
+
+                    auto message = event->message;
+                    auto timeStamp = message.getTimeStamp();
+
+                    if (! std::isfinite(timeStamp))
+                        timeStamp = 0.0;
+
+                    const auto quantized = juce::jlimit(0.0,
+                                                        clip.lengthBeats,
+                                                        std::round(timeStamp / gridBeats) * gridBeats);
+                    message.setTimeStamp(quantized);
+                    event->message = message;
+                }
+
+                clip.sequence.sort();
+                clip.sequence.updateMatchedPairs();
+                return true;
+            }
+
+    return false;
+}
+
 bool AudioEngine::generateChordProgression(const TrackId& trackId, const juce::String& style)
 {
     std::scoped_lock lock(modelMutex);

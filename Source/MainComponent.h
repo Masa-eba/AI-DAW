@@ -45,6 +45,7 @@ private:
     void splitSelectedClip();
     void fadeInSelectedClip();
     void fadeOutSelectedClip();
+    void quantizeSelectedMidiClip();
     void generateAiChordsForSelectedTrack();
     void exportMix();
     void saveProject();
@@ -82,6 +83,7 @@ private:
     juce::TextButton splitClipButton;
     juce::TextButton fadeInButton;
     juce::TextButton fadeOutButton;
+    juce::TextButton quantizeMidiButton;
     juce::TextButton snapButton;
     juce::TextButton aiChordsButton;
     juce::TextButton playPauseButton;
