@@ -154,6 +154,7 @@ public:
     bool legatoMidiClip(const TrackId& trackId, const juce::Uuid& clipId);
     bool staccatoMidiClip(const TrackId& trackId, const juce::Uuid& clipId);
     bool setMidiClipNoteLength(const TrackId& trackId, const juce::Uuid& clipId, double lengthBeats);
+    bool scaleMidiClipTiming(const TrackId& trackId, const juce::Uuid& clipId, double scaleFactor);
     bool reverseMidiClip(const TrackId& trackId, const juce::Uuid& clipId);
     bool toggleMidiClipMuted(const TrackId& trackId, const juce::Uuid& clipId);
     bool generateChordProgression(const TrackId& trackId, const juce::String& style);

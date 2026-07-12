@@ -899,6 +899,24 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
         return true;
     }
 
+    if (key.getModifiers().isCommandDown()
+        && key.getModifiers().isAltDown()
+        && key.getModifiers().isShiftDown()
+        && key.getKeyCode() == '[')
+    {
+        scaleSelectedMidiClipTiming(0.5);
+        return true;
+    }
+
+    if (key.getModifiers().isCommandDown()
+        && key.getModifiers().isAltDown()
+        && key.getModifiers().isShiftDown()
+        && key.getKeyCode() == ']')
+    {
+        scaleSelectedMidiClipTiming(2.0);
+        return true;
+    }
+
     if (key.getModifiers().isAltDown()
         && key.getModifiers().isShiftDown()
         && key.getKeyCode() == 'l')
@@ -3286,6 +3304,27 @@ void MainComponent::setSelectedMidiClipNoteLengthToGrid()
         return;
     }
 
+    timelineComponent.repaint();
+}
+
+void MainComponent::scaleSelectedMidiClipTiming(double scaleFactor)
+{
+    const auto selectedMidiClip = timelineComponent.getSelectedMidiClip();
+
+    if (! selectedMidiClip.has_value())
+    {
+        showErrorMessage("No MIDI clip selected", "Select a MIDI clip before scaling timing.");
+        return;
+    }
+
+    if (! audioEngine.scaleMidiClipTiming(selectedMidiClip->first, selectedMidiClip->second, scaleFactor))
+    {
+        showErrorMessage("Timing scale failed", "The selected MIDI clip timing could not be scaled.");
+        return;
+    }
+
+    updateTimelineSize();
+    updateTransportDisplay();
     timelineComponent.repaint();
 }
 

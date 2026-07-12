@@ -2032,6 +2032,38 @@ bool AudioEngine::setMidiClipNoteLength(const TrackId& trackId,
     return false;
 }
 
+bool AudioEngine::scaleMidiClipTiming(const TrackId& trackId,
+                                      const juce::Uuid& clipId,
+                                      double scaleFactor)
+{
+    if (! std::isfinite(scaleFactor) || scaleFactor <= 0.0)
+        return false;
+
+    std::scoped_lock lock(modelMutex);
+    saveUndoSnapshotNoLock();
+
+    if (auto* track = projectModel.findMidiTrack(trackId))
+        for (auto& clip : track->clips)
+            if (clip.id == clipId)
+            {
+                if (clip.sequence.getNumEvents() == 0 || clip.lengthBeats <= 0.0)
+                    return false;
+
+                const auto safeScale = juce::jlimit(0.25, 4.0, scaleFactor);
+
+                for (auto i = 0; i < clip.sequence.getNumEvents(); ++i)
+                    if (auto* event = clip.sequence.getEventPointer(i))
+                        event->message.setTimeStamp(juce::jmax(0.0, event->message.getTimeStamp() * safeScale));
+
+                clip.lengthBeats = juce::jmax(0.25, clip.lengthBeats * safeScale);
+                clip.sequence.sort();
+                clip.sequence.updateMatchedPairs();
+                return true;
+            }
+
+    return false;
+}
+
 bool AudioEngine::reverseMidiClip(const TrackId& trackId, const juce::Uuid& clipId)
 {
     std::scoped_lock lock(modelMutex);
