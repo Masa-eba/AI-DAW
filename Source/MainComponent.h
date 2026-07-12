@@ -50,6 +50,7 @@ private:
     void clearAllTrackMuteSolo();
     void clearAllTrackArms();
     void toggleSelectedTrackArm();
+    void armOnlySelectedTrack();
     void toggleSelectedTrackMute();
     void toggleSelectedTrackSolo();
     void soloOnlySelectedTrack();

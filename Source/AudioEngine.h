@@ -77,6 +77,7 @@ public:
     void setTrackSolo(const TrackId& trackId, bool solo);
     void soloOnlyTrack(const TrackId& trackId);
     void setTrackArmed(const TrackId& trackId, bool armed);
+    void armOnlyTrack(const TrackId& trackId);
     void clearTrackMuteSolo();
     void clearTrackArms();
     void setAudioClipStartTime(const TrackId& trackId,

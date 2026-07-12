@@ -991,6 +991,14 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
         return true;
     }
 
+    if (key.getModifiers().isAltDown()
+        && key.getModifiers().isShiftDown()
+        && key.getKeyCode() == 'r')
+    {
+        armOnlySelectedTrack();
+        return true;
+    }
+
     if (key.getModifiers().isAltDown() && key.getKeyCode() == 'r')
     {
         toggleSelectedTrackArm();
@@ -1645,6 +1653,14 @@ void MainComponent::toggleSelectedTrackArm()
     }
 
     audioEngine.setTrackArmed(selected.id, ! armed);
+    updateSelectedTrackControls();
+    timelineComponent.repaint();
+}
+
+void MainComponent::armOnlySelectedTrack()
+{
+    const auto selected = getSelectedTrack();
+    audioEngine.armOnlyTrack(selected.id);
     updateSelectedTrackControls();
     timelineComponent.repaint();
 }
