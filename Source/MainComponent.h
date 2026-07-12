@@ -47,6 +47,8 @@ private:
     void moveSelectedTrack(int direction);
     void cycleSnapGrid(int direction);
     void updateSnapButtonText();
+    void addMarkerAtPlayhead();
+    void jumpToMarker(int direction);
     void loopSelectedClip();
     void movePlayheadByGrid(int direction, bool byBar);
     void importAudioToSelectedTrack();

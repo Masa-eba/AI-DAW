@@ -9,6 +9,13 @@
 #include <memory>
 #include <vector>
 
+struct ProjectMarker
+{
+    juce::Uuid id;
+    double timeSeconds = 0.0;
+    juce::String name;
+};
+
 class ProjectModel final
 {
 public:
@@ -32,6 +39,8 @@ public:
     double getBpm() const;
     TempoMap& getTempoMap();
     const TempoMap& getTempoMap() const;
+    juce::Uuid addMarker(double timeSeconds);
+    const std::vector<ProjectMarker>& getMarkers() const;
 
     double getProjectLengthSeconds() const;
     juce::String toJsonString() const;
@@ -45,5 +54,6 @@ public:
 private:
     std::vector<std::unique_ptr<AudioTrack>> audioTracks;
     std::vector<std::unique_ptr<MidiTrack>> midiTracks;
+    std::vector<ProjectMarker> markers;
     TempoMap tempoMap;
 };

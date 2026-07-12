@@ -188,6 +188,28 @@ const TempoMap& ProjectModel::getTempoMap() const
     return tempoMap;
 }
 
+juce::Uuid ProjectModel::addMarker(double timeSeconds)
+{
+    ProjectMarker marker;
+    marker.timeSeconds = juce::jmax(0.0, timeSeconds);
+    marker.name = "Marker " + juce::String(markers.size() + 1);
+    const auto id = marker.id;
+    markers.push_back(marker);
+
+    std::sort(markers.begin(), markers.end(),
+              [](const auto& left, const auto& right)
+              {
+                  return left.timeSeconds < right.timeSeconds;
+              });
+
+    return id;
+}
+
+const std::vector<ProjectMarker>& ProjectModel::getMarkers() const
+{
+    return markers;
+}
+
 double ProjectModel::getProjectLengthSeconds() const
 {
     double length = 0.0;
@@ -212,6 +234,17 @@ juce::String ProjectModel::toJsonString(const juce::File& projectDirectory) cons
     auto root = std::make_unique<juce::DynamicObject>();
     root->setProperty("version", 2);
     root->setProperty("bpm", tempoMap.getBpm());
+
+    juce::Array<juce::var> markerArray;
+    for (const auto& marker : markers)
+    {
+        auto object = std::make_unique<juce::DynamicObject>();
+        object->setProperty("id", marker.id.toString());
+        object->setProperty("timeSeconds", marker.timeSeconds);
+        object->setProperty("name", marker.name);
+        markerArray.add(juce::var(object.release()));
+    }
+    root->setProperty("markers", markerArray);
 
     juce::Array<juce::var> audio;
     for (const auto& track : audioTracks)
@@ -317,6 +350,19 @@ bool ProjectModel::loadFromJsonString(const juce::String& json, const juce::File
 
     clearProject();
     tempoMap.setBpm(static_cast<double>(parsed.getProperty("bpm", 120.0)));
+
+    if (auto* markerArray = parsed.getProperty("markers", {}).getArray())
+    {
+        for (const auto& item : *markerArray)
+            if (item.isObject())
+            {
+                ProjectMarker marker;
+                marker.id = juce::Uuid(item.getProperty("id", juce::Uuid().toString()).toString());
+                marker.timeSeconds = static_cast<double>(item.getProperty("timeSeconds", 0.0));
+                marker.name = item.getProperty("name", "Marker").toString();
+                markers.push_back(marker);
+            }
+    }
 
     if (auto* audio = parsed.getProperty("audioTracks", {}).getArray())
     {
@@ -429,5 +475,6 @@ void ProjectModel::clearProject()
 {
     audioTracks.clear();
     midiTracks.clear();
+    markers.clear();
     tempoMap.setBpm(120.0);
 }

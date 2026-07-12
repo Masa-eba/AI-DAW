@@ -639,6 +639,24 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
         return true;
     }
 
+    if (key.getModifiers().isAltDown() && key.getKeyCode() == 'm')
+    {
+        addMarkerAtPlayhead();
+        return true;
+    }
+
+    if (key.getModifiers().isAltDown() && key.getKeyCode() == ',')
+    {
+        jumpToMarker(-1);
+        return true;
+    }
+
+    if (key.getModifiers().isAltDown() && key.getKeyCode() == '.')
+    {
+        jumpToMarker(1);
+        return true;
+    }
+
     if (key.getModifiers().isAltDown()
         && key.getModifiers().isShiftDown()
         && key.getKeyCode() == juce::KeyPress::upKey)
@@ -923,6 +941,58 @@ void MainComponent::updateSnapButtonText()
         label += " Off";
 
     snapButton.setButtonText(label);
+}
+
+void MainComponent::addMarkerAtPlayhead()
+{
+    audioEngine.addMarker(audioEngine.getPosition());
+    updateTimelineSize();
+    timelineComponent.repaint();
+}
+
+void MainComponent::jumpToMarker(int direction)
+{
+    const auto& markers = audioEngine.getProjectModel().getMarkers();
+
+    if (markers.empty())
+        return;
+
+    const auto currentPosition = audioEngine.getPosition();
+    const auto epsilon = 0.01;
+    std::optional<double> target;
+
+    if (direction > 0)
+    {
+        for (const auto& marker : markers)
+        {
+            if (marker.timeSeconds > currentPosition + epsilon)
+            {
+                target = marker.timeSeconds;
+                break;
+            }
+        }
+
+        if (! target.has_value())
+            target = markers.front().timeSeconds;
+    }
+    else
+    {
+        for (auto iterator = markers.rbegin(); iterator != markers.rend(); ++iterator)
+        {
+            if (iterator->timeSeconds < currentPosition - epsilon)
+            {
+                target = iterator->timeSeconds;
+                break;
+            }
+        }
+
+        if (! target.has_value())
+            target = markers.back().timeSeconds;
+    }
+
+    audioEngine.setPosition(*target);
+    updateTransportDisplay();
+    timelineComponent.setPosition(audioEngine.getPosition());
 }
 
 void MainComponent::movePlayheadByGrid(int direction, bool byBar)

@@ -266,6 +266,13 @@ double AudioEngine::getBpm() const
     return projectModel.getBpm();
 }
 
+juce::Uuid AudioEngine::addMarker(double timeSeconds)
+{
+    std::scoped_lock lock(modelMutex);
+    saveUndoSnapshotNoLock();
+    return projectModel.addMarker(timeSeconds);
+}
+
 void AudioEngine::setGain(float gain)
 {
     masterGain.store(juce::jlimit(0.0f, 1.0f, gain));

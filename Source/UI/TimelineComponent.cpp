@@ -118,6 +118,30 @@ void TimelineComponent::paint(juce::Graphics& graphics)
 
     if (projectModel != nullptr)
     {
+        graphics.setFont(juce::Font(juce::FontOptions(12.0f, juce::Font::bold)));
+
+        for (const auto& marker : projectModel->getMarkers())
+        {
+            const auto x = secondsToX(marker.timeSeconds);
+            juce::Path markerPath;
+            markerPath.addTriangle(x - 5.0f, 0.0f, x + 5.0f, 0.0f, x, static_cast<float>(headerHeight));
+            graphics.setColour(juce::Colour(0xfff28c28));
+            graphics.fillPath(markerPath);
+            graphics.drawVerticalLine(static_cast<int>(x),
+                                      static_cast<float>(headerHeight),
+                                      static_cast<float>(getHeight()));
+            graphics.drawText(marker.name,
+                              static_cast<int>(x) + 6,
+                              5,
+                              90,
+                              18,
+                              juce::Justification::left,
+                              true);
+        }
+    }
+
+    if (projectModel != nullptr)
+    {
         auto y = headerHeight;
 
         for (const auto& track : projectModel->getAudioTracks())

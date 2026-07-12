@@ -49,6 +49,7 @@ public:
     double getLength() const;
     void setBpm(double bpm);
     double getBpm() const;
+    juce::Uuid addMarker(double timeSeconds);
     void setGain(float gain);
     float getGain() const;
     void setMetronomeEnabled(bool enabled);
