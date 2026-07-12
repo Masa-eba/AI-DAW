@@ -17,15 +17,28 @@ endif()
 add_subdirectory(JUCE)
 
 juce_add_gui_app(MiniDAW
-    PRODUCT_NAME "Mini DAW"
+    PRODUCT_NAME "AI-DAW"
     COMPANY_NAME "Masatoshi"
-    BUNDLE_ID "com.masatoshi.minidaw")
+    BUNDLE_ID "com.masatoshi.minidaw"
+    MICROPHONE_PERMISSION_ENABLED TRUE
+    MICROPHONE_PERMISSION_TEXT "AI-DAW uses the microphone to record audio tracks.")
 
 target_sources(MiniDAW
     PRIVATE
         Source/Main.cpp
         Source/MainComponent.cpp
-        Source/AudioEngine.cpp)
+        Source/AudioEngine.cpp
+        Source/WaveformComponent.cpp
+        Source/TimeFormatter.cpp
+        Source/Core/ProjectModel.cpp
+        Source/Core/TempoMap.cpp
+        Source/Audio/AudioTrack.cpp
+        Source/Audio/AudioRecorder.cpp
+        Source/Audio/Metronome.cpp
+        Source/Midi/MidiTrack.cpp
+        Source/Midi/MidiInputManager.cpp
+        Source/Midi/SimpleSynth.cpp
+        Source/UI/TimelineComponent.cpp)
 
 target_include_directories(MiniDAW
     PRIVATE
@@ -41,6 +54,7 @@ target_link_libraries(MiniDAW
         juce::juce_audio_basics
         juce::juce_audio_devices
         juce::juce_audio_formats
+        juce::juce_audio_processors
         juce::juce_audio_utils
         juce::juce_core
         juce::juce_data_structures

@@ -1,37 +1,87 @@
 #include "MainComponent.h"
 
+#include "TimeFormatter.h"
+
 MainComponent::MainComponent()
+    : keyboardComponent(keyboardState, juce::MidiKeyboardComponent::horizontalKeyboard),
+      midiInputManager(keyboardState)
 {
-    titleLabel.setText("Mini DAW", juce::dontSendNotification);
-    titleLabel.setJustificationType(juce::Justification::centred);
-    titleLabel.setFont(juce::Font(juce::FontOptions(28.0f, juce::Font::bold)));
+    audioEngine.setMidiKeyboardState(&keyboardState);
+
+    titleLabel.setText("AI-DAW", juce::dontSendNotification);
+    titleLabel.setJustificationType(juce::Justification::centredLeft);
+    titleLabel.setFont(juce::Font(juce::FontOptions(26.0f, juce::Font::bold)));
     titleLabel.setColour(juce::Label::textColourId, juce::Colours::white);
     addAndMakeVisible(titleLabel);
 
-    fileNameLabel.setText("No file loaded", juce::dontSendNotification);
-    fileNameLabel.setJustificationType(juce::Justification::centred);
-    fileNameLabel.setFont(juce::Font(juce::FontOptions(18.0f)));
-    fileNameLabel.setColour(juce::Label::textColourId, juce::Colours::lightgrey);
-    fileNameLabel.setMinimumHorizontalScale(0.5f);
-    addAndMakeVisible(fileNameLabel);
+    positionLabel.setText("00:00 / 00:00   Bar 1 Beat 1", juce::dontSendNotification);
+    positionLabel.setColour(juce::Label::textColourId, juce::Colours::white);
+    addAndMakeVisible(positionLabel);
 
-    openButton.setButtonText("Open");
-    openButton.onClick = [this] { openAudioFile(); };
-    addAndMakeVisible(openButton);
+    bpmLabel.setText("BPM", juce::dontSendNotification);
+    bpmLabel.setColour(juce::Label::textColourId, juce::Colours::white);
+    addAndMakeVisible(bpmLabel);
+
+    masterLabel.setText("Master", juce::dontSendNotification);
+    masterLabel.setColour(juce::Label::textColourId, juce::Colours::white);
+    addAndMakeVisible(masterLabel);
+
+    midiInputLabel.setText("MIDI Input", juce::dontSendNotification);
+    midiInputLabel.setColour(juce::Label::textColourId, juce::Colours::white);
+    addAndMakeVisible(midiInputLabel);
+
+    trackLabel.setText("Track", juce::dontSendNotification);
+    trackLabel.setColour(juce::Label::textColourId, juce::Colours::white);
+    addAndMakeVisible(trackLabel);
+
+    openProjectButton.setButtonText("Open Project");
+    openProjectButton.onClick = [this] { openProject(); };
+    addAndMakeVisible(openProjectButton);
+
+    saveProjectButton.setButtonText("Save");
+    saveProjectButton.onClick = [this] { saveProject(); };
+    addAndMakeVisible(saveProjectButton);
+
+    exportButton.setButtonText("Export Mix");
+    exportButton.onClick = [this] { exportMix(); };
+    addAndMakeVisible(exportButton);
+
+    addAudioTrackButton.setButtonText("+ Audio Track");
+    addAudioTrackButton.onClick = [this]
+    {
+        audioEngine.addAudioTrack();
+        refreshTrackSelector();
+    };
+    addAndMakeVisible(addAudioTrackButton);
+
+    addMidiTrackButton.setButtonText("+ MIDI Track");
+    addMidiTrackButton.onClick = [this]
+    {
+        audioEngine.addMidiTrack();
+        refreshTrackSelector();
+    };
+    addAndMakeVisible(addMidiTrackButton);
+
+    deleteTrackButton.setButtonText("Delete");
+    deleteTrackButton.onClick = [this]
+    {
+        const auto selected = getSelectedTrack();
+        audioEngine.removeTrack(selected.id);
+        refreshTrackSelector();
+    };
+    addAndMakeVisible(deleteTrackButton);
+
+    importAudioButton.setButtonText("Import Audio");
+    importAudioButton.onClick = [this] { importAudioToSelectedTrack(); };
+    addAndMakeVisible(importAudioButton);
 
     playPauseButton.setButtonText("Play");
     playPauseButton.onClick = [this]
     {
         if (audioEngine.isPlaying())
-        {
             audioEngine.pause();
-            playPauseButton.setButtonText("Play");
-        }
         else
-        {
             audioEngine.play();
-            playPauseButton.setButtonText(audioEngine.isPlaying() ? "Pause" : "Play");
-        }
 
         updateButtonStates();
     };
@@ -41,29 +91,174 @@ MainComponent::MainComponent()
     stopButton.onClick = [this]
     {
         audioEngine.stop();
-        playPauseButton.setButtonText("Play");
         updateButtonStates();
     };
     addAndMakeVisible(stopButton);
 
-    audioSourcePlayer.setSource(&audioEngine);
+    recordButton.setButtonText("Record");
+    recordButton.onClick = [this]
+    {
+        if (audioEngine.isRecording())
+        {
+            audioEngine.stopRecording();
+            audioEngine.pause();
+        }
+        else if (! audioEngine.startRecording())
+        {
+            showErrorMessage("Recording failed", "Arm an audio or MIDI track before recording.");
+        }
 
-    const auto audioDeviceError = audioDeviceManager.initialiseWithDefaultDevices(0, 2);
+        updateButtonStates();
+        timelineComponent.repaint();
+    };
+    addAndMakeVisible(recordButton);
+
+    metronomeButton.setButtonText("Metronome");
+    metronomeButton.setClickingTogglesState(true);
+    metronomeButton.onClick = [this]
+    {
+        audioEngine.setMetronomeEnabled(metronomeButton.getToggleState());
+    };
+    addAndMakeVisible(metronomeButton);
+
+    armButton.setButtonText("R");
+    armButton.setClickingTogglesState(true);
+    armButton.onClick = [this]
+    {
+        const auto selected = getSelectedTrack();
+        audioEngine.setTrackArmed(selected.id, armButton.getToggleState());
+        updateSelectedTrackControls();
+    };
+    addAndMakeVisible(armButton);
+
+    muteButton.setButtonText("M");
+    muteButton.setClickingTogglesState(true);
+    muteButton.onClick = [this]
+    {
+        const auto selected = getSelectedTrack();
+        audioEngine.setTrackMuted(selected.id, muteButton.getToggleState());
+        timelineComponent.repaint();
+    };
+    addAndMakeVisible(muteButton);
+
+    soloButton.setButtonText("S");
+    soloButton.setClickingTogglesState(true);
+    soloButton.onClick = [this]
+    {
+        const auto selected = getSelectedTrack();
+        audioEngine.setTrackSolo(selected.id, soloButton.getToggleState());
+        timelineComponent.repaint();
+    };
+    addAndMakeVisible(soloButton);
+
+    bpmSlider.setSliderStyle(juce::Slider::LinearHorizontal);
+    bpmSlider.setTextBoxStyle(juce::Slider::TextBoxRight, false, 56, 22);
+    bpmSlider.setRange(20.0, 300.0, 1.0);
+    bpmSlider.setValue(120.0, juce::dontSendNotification);
+    bpmSlider.onValueChange = [this]
+    {
+        audioEngine.setBpm(bpmSlider.getValue());
+        timelineComponent.repaint();
+    };
+    addAndMakeVisible(bpmSlider);
+
+    masterVolumeSlider.setSliderStyle(juce::Slider::LinearHorizontal);
+    masterVolumeSlider.setTextBoxStyle(juce::Slider::TextBoxRight, false, 56, 22);
+    masterVolumeSlider.setRange(0.0, 1.0, 0.01);
+    masterVolumeSlider.setValue(0.8, juce::dontSendNotification);
+    masterVolumeSlider.onValueChange = [this]
+    {
+        audioEngine.setGain(static_cast<float>(masterVolumeSlider.getValue()));
+    };
+    addAndMakeVisible(masterVolumeSlider);
+
+    trackVolumeSlider.setSliderStyle(juce::Slider::LinearHorizontal);
+    trackVolumeSlider.setTextBoxStyle(juce::Slider::TextBoxRight, false, 56, 22);
+    trackVolumeSlider.setRange(0.0, 1.0, 0.01);
+    trackVolumeSlider.setValue(0.8, juce::dontSendNotification);
+    trackVolumeSlider.onValueChange = [this]
+    {
+        const auto selected = getSelectedTrack();
+        audioEngine.setTrackGain(selected.id, static_cast<float>(trackVolumeSlider.getValue()));
+    };
+    addAndMakeVisible(trackVolumeSlider);
+
+    trackSelector.onChange = [this] { updateSelectedTrackControls(); };
+    addAndMakeVisible(trackSelector);
+
+    midiInputSelector.onChange = [this]
+    {
+        const auto index = midiInputSelector.getSelectedItemIndex();
+
+        if (juce::isPositiveAndBelow(index, midiDevices.size()))
+            if (! midiInputManager.openDevice(midiDevices.getReference(index)))
+                showErrorMessage("MIDI device error", "The selected MIDI input could not be opened.");
+    };
+    addAndMakeVisible(midiInputSelector);
+
+    timelineComponent.setProjectModel(&audioEngine.getProjectModel());
+    timelineComponent.onSeek = [this](double seconds)
+    {
+        audioEngine.setPosition(seconds);
+        updateTransportDisplay();
+    };
+    timelineComponent.onAudioClipMoved = [this](const TrackId& trackId, double startTimeSeconds)
+    {
+        audioEngine.setAudioClipStartTime(trackId, startTimeSeconds);
+        timelineComponent.repaint();
+        updateTransportDisplay();
+    };
+    timelineComponent.onAudioClipMovedToTrack = [this](const TrackId& sourceTrackId,
+                                                       const TrackId& destinationTrackId,
+                                                       double startTimeSeconds)
+    {
+        audioEngine.moveAudioClipToTrack(sourceTrackId, destinationTrackId, startTimeSeconds);
+        refreshTrackSelector();
+        timelineComponent.repaint();
+        updateTransportDisplay();
+    };
+    timelineComponent.onAudioFileDropped = [this](const TrackId& trackId,
+                                                  const juce::File& file,
+                                                  double startTimeSeconds)
+    {
+        if (! audioEngine.loadAudioFileToTrack(trackId, file))
+        {
+            showErrorMessage("Failed to open file",
+                             "The dropped audio file could not be loaded.");
+            return;
+        }
+
+        audioEngine.setAudioClipStartTime(trackId, startTimeSeconds);
+        refreshTrackSelector();
+        timelineComponent.repaint();
+        updateTransportDisplay();
+    };
+    timelineViewport.setViewedComponent(&timelineComponent, false);
+    addAndMakeVisible(timelineViewport);
+
+    addAndMakeVisible(keyboardComponent);
+    keyboardComponent.setAvailableRange(48, 72);
+    keyboardComponent.setKeyWidth(24.0f);
+
+    const auto audioDeviceError = audioDeviceManager.initialiseWithDefaultDevices(2, 2);
 
     if (audioDeviceError.isNotEmpty())
         showErrorMessage("Audio device error", audioDeviceError);
     else
-        audioDeviceManager.addAudioCallback(&audioSourcePlayer);
-    updateButtonStates();
+        audioDeviceManager.addAudioCallback(&audioEngine);
 
+    refreshTrackSelector();
+    refreshMidiDevices();
+    updateButtonStates();
+    startTimerHz(30);
     setSize(1200, 700);
 }
 
 MainComponent::~MainComponent()
 {
+    stopTimer();
     audioEngine.stop();
-    audioDeviceManager.removeAudioCallback(&audioSourcePlayer);
-    audioSourcePlayer.setSource(nullptr);
+    audioDeviceManager.removeAudioCallback(&audioEngine);
 }
 
 void MainComponent::paint(juce::Graphics& graphics)
@@ -73,38 +268,202 @@ void MainComponent::paint(juce::Graphics& graphics)
 
 void MainComponent::resized()
 {
-    auto area = getLocalBounds().reduced(40);
+    auto area = getLocalBounds().reduced(16);
 
-    titleLabel.setBounds(area.removeFromTop(80));
-    area.removeFromTop(80);
-    fileNameLabel.setBounds(area.removeFromTop(50));
-    area.removeFromTop(50);
+    titleLabel.setBounds(area.removeFromTop(42));
 
-    auto buttonArea = area.removeFromTop(50);
-    const auto buttonWidth = 110;
-    const auto buttonHeight = 36;
-    const auto gap = 24;
-    const auto totalWidth = (buttonWidth * 3) + (gap * 2);
-    auto x = buttonArea.getCentreX() - (totalWidth / 2);
-    const auto y = buttonArea.getCentreY() - (buttonHeight / 2);
+    auto projectBar = area.removeFromTop(36);
+    openProjectButton.setBounds(projectBar.removeFromLeft(120).reduced(0, 3));
+    projectBar.removeFromLeft(8);
+    saveProjectButton.setBounds(projectBar.removeFromLeft(78).reduced(0, 3));
+    projectBar.removeFromLeft(8);
+    exportButton.setBounds(projectBar.removeFromLeft(110).reduced(0, 3));
+    projectBar.removeFromLeft(16);
+    addAudioTrackButton.setBounds(projectBar.removeFromLeft(130).reduced(0, 3));
+    projectBar.removeFromLeft(8);
+    addMidiTrackButton.setBounds(projectBar.removeFromLeft(124).reduced(0, 3));
 
-    openButton.setBounds(x, y, buttonWidth, buttonHeight);
-    x += buttonWidth + gap;
-    playPauseButton.setBounds(x, y, buttonWidth, buttonHeight);
-    x += buttonWidth + gap;
-    stopButton.setBounds(x, y, buttonWidth, buttonHeight);
+    auto transportBar = area.removeFromTop(44);
+    playPauseButton.setBounds(transportBar.removeFromLeft(88).reduced(0, 5));
+    transportBar.removeFromLeft(8);
+    stopButton.setBounds(transportBar.removeFromLeft(76).reduced(0, 5));
+    transportBar.removeFromLeft(8);
+    recordButton.setBounds(transportBar.removeFromLeft(92).reduced(0, 5));
+    transportBar.removeFromLeft(12);
+    bpmLabel.setBounds(transportBar.removeFromLeft(38));
+    bpmSlider.setBounds(transportBar.removeFromLeft(160).reduced(0, 4));
+    transportBar.removeFromLeft(8);
+    metronomeButton.setBounds(transportBar.removeFromLeft(112).reduced(0, 5));
+    transportBar.removeFromLeft(12);
+    positionLabel.setBounds(transportBar);
+
+    auto trackBar = area.removeFromTop(44);
+    trackLabel.setBounds(trackBar.removeFromLeft(48));
+    trackSelector.setBounds(trackBar.removeFromLeft(180).reduced(0, 5));
+    trackBar.removeFromLeft(8);
+    importAudioButton.setBounds(trackBar.removeFromLeft(112).reduced(0, 5));
+    trackBar.removeFromLeft(8);
+    deleteTrackButton.setBounds(trackBar.removeFromLeft(80).reduced(0, 5));
+    trackBar.removeFromLeft(8);
+    armButton.setBounds(trackBar.removeFromLeft(36).reduced(0, 5));
+    muteButton.setBounds(trackBar.removeFromLeft(36).reduced(0, 5));
+    soloButton.setBounds(trackBar.removeFromLeft(36).reduced(0, 5));
+    trackBar.removeFromLeft(8);
+    trackVolumeSlider.setBounds(trackBar.removeFromLeft(190).reduced(0, 5));
+
+    area.removeFromTop(8);
+    auto bottom = area.removeFromBottom(126);
+    timelineViewport.setBounds(area);
+    timelineComponent.setSize(2400, juce::jmax(area.getHeight(), 520));
+
+    auto midiBar = bottom.removeFromTop(36);
+    midiInputLabel.setBounds(midiBar.removeFromLeft(82));
+    midiInputSelector.setBounds(midiBar.removeFromLeft(260).reduced(0, 4));
+    midiBar.removeFromLeft(16);
+    masterLabel.setBounds(midiBar.removeFromLeft(58));
+    masterVolumeSlider.setBounds(midiBar.removeFromLeft(220).reduced(0, 4));
+
+    keyboardComponent.setBounds(bottom.reduced(0, 8));
 }
 
-void MainComponent::openAudioFile()
+void MainComponent::timerCallback()
 {
-    fileChooser = std::make_unique<juce::FileChooser>(
-        "Select an audio file",
-        juce::File{},
-        "*.wav;*.aiff;*.aif;*.mp3");
+    updateTransportDisplay();
+    updateButtonStates();
+    timelineComponent.setPosition(audioEngine.getPosition());
+}
 
+void MainComponent::refreshMidiDevices()
+{
+    midiInputSelector.clear();
+    midiDevices = midiInputManager.refreshDevices();
+
+    for (auto i = 0; i < midiDevices.size(); ++i)
+        midiInputSelector.addItem(midiDevices.getReference(i).name, i + 1);
+}
+
+void MainComponent::refreshTrackSelector()
+{
+    const auto previousId = trackSelector.getSelectedId();
+    trackSelector.clear();
+    auto itemId = 1;
+
+    for (const auto& track : audioEngine.getProjectModel().getAudioTracks())
+        trackSelector.addItem(track->state.name, itemId++);
+
+    for (const auto& track : audioEngine.getProjectModel().getMidiTracks())
+        trackSelector.addItem(track->state.name, itemId++);
+
+    if (previousId > 0 && previousId < itemId)
+        trackSelector.setSelectedId(previousId, juce::dontSendNotification);
+    else
+        selectFirstTrackIfNeeded();
+
+    updateSelectedTrackControls();
+    timelineComponent.repaint();
+}
+
+void MainComponent::selectFirstTrackIfNeeded()
+{
+    if (trackSelector.getNumItems() > 0)
+        trackSelector.setSelectedItemIndex(0, juce::dontSendNotification);
+}
+
+void MainComponent::updateSelectedTrackControls()
+{
+    const auto selected = getSelectedTrack();
+    const auto& model = audioEngine.getProjectModel();
+
+    if (const auto* track = model.findAudioTrack(selected.id))
+    {
+        armButton.setToggleState(track->state.armed, juce::dontSendNotification);
+        muteButton.setToggleState(track->state.muted, juce::dontSendNotification);
+        soloButton.setToggleState(track->state.solo, juce::dontSendNotification);
+        trackVolumeSlider.setValue(track->state.gain, juce::dontSendNotification);
+        importAudioButton.setEnabled(true);
+        return;
+    }
+
+    if (const auto* track = model.findMidiTrack(selected.id))
+    {
+        armButton.setToggleState(track->state.armed, juce::dontSendNotification);
+        muteButton.setToggleState(track->state.muted, juce::dontSendNotification);
+        soloButton.setToggleState(track->state.solo, juce::dontSendNotification);
+        trackVolumeSlider.setValue(track->state.gain, juce::dontSendNotification);
+        importAudioButton.setEnabled(false);
+    }
+}
+
+void MainComponent::updateTransportDisplay()
+{
+    const auto position = audioEngine.getPosition();
+    const auto length = audioEngine.getLength();
+    const auto beats = audioEngine.getProjectModel().getTempoMap().secondsToBeats(position);
+    const auto bar = audioEngine.getProjectModel().getTempoMap().getBarForBeats(beats);
+    const auto beat = audioEngine.getProjectModel().getTempoMap().getBeatInBar(beats);
+
+    positionLabel.setText(TimeFormatter::formatSeconds(position)
+                              + " / "
+                              + TimeFormatter::formatSeconds(length)
+                              + "   Bar "
+                              + juce::String(bar)
+                              + " Beat "
+                              + juce::String(beat),
+                          juce::dontSendNotification);
+}
+
+void MainComponent::updateButtonStates()
+{
+    playPauseButton.setButtonText(audioEngine.isPlaying() ? "Pause" : "Play");
+    recordButton.setButtonText(audioEngine.isRecording() ? "Stop Rec" : "Record");
+}
+
+void MainComponent::importAudioToSelectedTrack()
+{
+    const auto selected = getSelectedTrack();
+
+    if (selected.type != TrackType::Audio)
+        return;
+
+    fileChooser = std::make_unique<juce::FileChooser>("Select an audio file",
+                                                       juce::File{},
+                                                       "*.wav;*.aiff;*.aif;*.mp3");
     const auto flags = juce::FileBrowserComponent::openMode
                      | juce::FileBrowserComponent::canSelectFiles;
+    juce::Component::SafePointer<MainComponent> safeThis(this);
 
+    fileChooser->launchAsync(flags, [safeThis, selected](const juce::FileChooser& chooser)
+    {
+        if (safeThis == nullptr)
+            return;
+
+        auto* component = safeThis.getComponent();
+        const auto file = chooser.getResult();
+
+        if (file == juce::File{})
+            return;
+
+        if (! component->audioEngine.loadAudioFileToTrack(selected.id, file))
+        {
+            component->showErrorMessage("Failed to open file",
+                                        "The selected audio file could not be loaded.");
+            return;
+        }
+
+        component->timelineComponent.repaint();
+        component->updateTransportDisplay();
+    });
+}
+
+void MainComponent::exportMix()
+{
+    fileChooser = std::make_unique<juce::FileChooser>("Export mix",
+                                                       juce::File::getSpecialLocation(juce::File::userDocumentsDirectory)
+                                                           .getChildFile("AI-DAW Mix.wav"),
+                                                       "*.wav");
+    const auto flags = juce::FileBrowserComponent::saveMode
+                     | juce::FileBrowserComponent::canSelectFiles
+                     | juce::FileBrowserComponent::warnAboutOverwriting;
     juce::Component::SafePointer<MainComponent> safeThis(this);
 
     fileChooser->launchAsync(flags, [safeThis](const juce::FileChooser& chooser)
@@ -112,43 +471,119 @@ void MainComponent::openAudioFile()
         if (safeThis == nullptr)
             return;
 
+        auto destination = chooser.getResult();
+
+        if (destination == juce::File{})
+            return;
+
+        if (! destination.hasFileExtension(".wav"))
+            destination = destination.withFileExtension(".wav");
+
         auto* component = safeThis.getComponent();
-        const auto selectedFile = chooser.getResult();
 
-        if (selectedFile == juce::File{})
-            return;
-
-        if (component->audioEngine.loadFile(selectedFile))
-        {
-            component->fileNameLabel.setText(selectedFile.getFileName(), juce::dontSendNotification);
-            component->playPauseButton.setButtonText("Play");
-            component->updateButtonStates();
-            return;
-        }
-
-        component->showErrorMessage("Failed to open file",
-                                    "The selected audio file could not be loaded.");
-        component->updateButtonStates();
+        if (component->audioEngine.exportToWav(destination))
+            component->showInfoMessage("Export complete", "The mix was exported successfully.");
+        else
+            component->showErrorMessage("Export failed", "The mix could not be exported.");
     });
 }
 
-void MainComponent::updateButtonStates()
+void MainComponent::saveProject()
 {
-    const auto hasFile = audioEngine.hasLoadedFile();
+    fileChooser = std::make_unique<juce::FileChooser>("Save project",
+                                                       juce::File::getSpecialLocation(juce::File::userDocumentsDirectory)
+                                                           .getChildFile("project.aidaw"),
+                                                       "*.aidaw");
+    const auto flags = juce::FileBrowserComponent::saveMode
+                     | juce::FileBrowserComponent::canSelectFiles
+                     | juce::FileBrowserComponent::warnAboutOverwriting;
+    juce::Component::SafePointer<MainComponent> safeThis(this);
 
-    openButton.setEnabled(true);
-    playPauseButton.setEnabled(hasFile);
-    stopButton.setEnabled(hasFile);
+    fileChooser->launchAsync(flags, [safeThis](const juce::FileChooser& chooser)
+    {
+        if (safeThis == nullptr)
+            return;
 
-    if (! hasFile)
-        playPauseButton.setButtonText("Play");
-    else if (audioEngine.isPlaying())
-        playPauseButton.setButtonText("Pause");
+        auto file = chooser.getResult();
+
+        if (file == juce::File{})
+            return;
+
+        if (! file.hasFileExtension(".aidaw"))
+            file = file.withFileExtension(".aidaw");
+
+        auto* component = safeThis.getComponent();
+
+        if (component->audioEngine.saveProject(file))
+            component->showInfoMessage("Project saved", "The project file was saved.");
+        else
+            component->showErrorMessage("Project save failed", "The project could not be saved.");
+    });
+}
+
+void MainComponent::openProject()
+{
+    fileChooser = std::make_unique<juce::FileChooser>("Open project", juce::File{}, "*.aidaw");
+    const auto flags = juce::FileBrowserComponent::openMode
+                     | juce::FileBrowserComponent::canSelectFiles;
+    juce::Component::SafePointer<MainComponent> safeThis(this);
+
+    fileChooser->launchAsync(flags, [safeThis](const juce::FileChooser& chooser)
+    {
+        if (safeThis == nullptr)
+            return;
+
+        const auto file = chooser.getResult();
+
+        if (file == juce::File{})
+            return;
+
+        auto* component = safeThis.getComponent();
+
+        if (component->audioEngine.loadProject(file))
+        {
+            component->refreshTrackSelector();
+            component->timelineComponent.repaint();
+            return;
+        }
+
+        component->showErrorMessage("Project open failed", "The project could not be opened.");
+    });
 }
 
 void MainComponent::showErrorMessage(const juce::String& title, const juce::String& message)
 {
-    juce::AlertWindow::showMessageBoxAsync(juce::AlertWindow::WarningIcon,
-                                           title,
-                                           message);
+    juce::AlertWindow::showMessageBoxAsync(juce::AlertWindow::WarningIcon, title, message);
+}
+
+void MainComponent::showInfoMessage(const juce::String& title, const juce::String& message)
+{
+    juce::AlertWindow::showMessageBoxAsync(juce::AlertWindow::InfoIcon, title, message);
+}
+
+MainComponent::TrackSelection MainComponent::getSelectedTrack() const
+{
+    auto index = trackSelector.getSelectedItemIndex();
+    const auto& model = audioEngine.getProjectModel();
+
+    if (! juce::isPositiveAndBelow(index, trackSelector.getNumItems()))
+        index = 0;
+
+    const auto audioCount = static_cast<int>(model.getAudioTracks().size());
+
+    if (index < audioCount && ! model.getAudioTracks().empty())
+        return { model.getAudioTracks()[static_cast<size_t>(index)]->state.id, TrackType::Audio };
+
+    const auto midiIndex = index - audioCount;
+
+    if (juce::isPositiveAndBelow(midiIndex, static_cast<int>(model.getMidiTracks().size())))
+        return { model.getMidiTracks()[static_cast<size_t>(midiIndex)]->state.id, TrackType::Midi };
+
+    if (! model.getAudioTracks().empty())
+        return { model.getAudioTracks().front()->state.id, TrackType::Audio };
+
+    if (! model.getMidiTracks().empty())
+        return { model.getMidiTracks().front()->state.id, TrackType::Midi };
+
+    return {};
 }

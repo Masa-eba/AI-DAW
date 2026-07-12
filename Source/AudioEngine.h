@@ -1,49 +1,119 @@
 #pragma once
 
+#include "Audio/AudioRecorder.h"
+#include "Audio/Metronome.h"
+#include "Core/ProjectModel.h"
+#include "Midi/SimpleSynth.h"
+
 #include <JuceHeader.h>
 
-class AudioEngine final : public juce::AudioSource
+#include <atomic>
+#include <mutex>
+
+enum class TransportState
+{
+    Stopped,
+    Playing,
+    Paused,
+    Recording
+};
+
+class AudioEngine final : public juce::AudioIODeviceCallback
 {
 public:
     AudioEngine();
     ~AudioEngine() override;
 
-    // Loads a supported audio file and replaces the current transport source.
+    ProjectModel& getProjectModel();
+    const ProjectModel& getProjectModel() const;
+
+    TrackId addAudioTrack();
+    TrackId addMidiTrack();
+    bool removeTrack(const TrackId& trackId);
     bool loadFile(const juce::File& file);
+    bool loadAudioFileToTrack(const TrackId& trackId, const juce::File& file);
 
-    // Starts playback from the current transport position.
     void play();
-
-    // Stops playback while preserving the current transport position.
     void pause();
-
-    // Stops playback and returns the transport position to the beginning.
     void stop();
+    bool startRecording();
+    void stopRecording();
 
-    // Moves playback to a safe position in seconds.
     void setPosition(double seconds);
-
-    // Sets output gain in the range 0.0 to 1.0.
+    double getPosition() const;
+    double getLength() const;
+    void setBpm(double bpm);
+    double getBpm() const;
     void setGain(float gain);
-
-    // Returns whether the transport is currently playing.
+    float getGain() const;
+    void setMetronomeEnabled(bool enabled);
+    bool isMetronomeEnabled() const;
     bool isPlaying() const;
-
-    // Returns true after a file has been loaded successfully.
+    bool isRecording() const;
     bool hasLoadedFile() const;
-
-    // Returns the currently loaded file, or an empty file if none is loaded.
     const juce::File& getCurrentFile() const;
 
-    void prepareToPlay(int samplesPerBlockExpected, double sampleRate) override;
-    void getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill) override;
-    void releaseResources() override;
+    void setTrackGain(const TrackId& trackId, float gain);
+    void setTrackMuted(const TrackId& trackId, bool muted);
+    void setTrackSolo(const TrackId& trackId, bool solo);
+    void setTrackArmed(const TrackId& trackId, bool armed);
+    void setAudioClipStartTime(const TrackId& trackId, double startTimeSeconds);
+    void moveAudioClipToTrack(const TrackId& sourceTrackId,
+                              const TrackId& destinationTrackId,
+                              double startTimeSeconds);
+
+    void setMidiKeyboardState(juce::MidiKeyboardState* state);
+    bool saveProject(const juce::File& file) const;
+    bool loadProject(const juce::File& file);
+    bool exportToWav(const juce::File& destinationFile);
+
+    void audioDeviceIOCallbackWithContext(const float* const* inputChannelData,
+                                          int numInputChannels,
+                                          float* const* outputChannelData,
+                                          int numOutputChannels,
+                                          int numSamples,
+                                          const juce::AudioIODeviceCallbackContext& context) override;
+    void audioDeviceAboutToStart(juce::AudioIODevice* device) override;
+    void audioDeviceStopped() override;
 
 private:
+    bool loadAudioFileIntoTrack(AudioTrack& track, const juce::File& file);
+    void renderToBuffer(juce::AudioBuffer<float>& buffer,
+                        int numSamples,
+                        double blockStartSeconds,
+                        bool includeMetronome);
+    void renderAudioTracks(juce::AudioBuffer<float>& buffer,
+                           int numSamples,
+                           double blockStartSeconds) const;
+    void renderMidiTracks(juce::AudioBuffer<float>& buffer,
+                          int numSamples,
+                          double blockStartSeconds,
+                          juce::MidiBuffer& midiBuffer,
+                          SimpleSynth& synthToUse) const;
+    bool anySoloedTrack() const;
+    bool shouldRenderTrack(const TrackState& state, bool anySolo) const;
+    AudioTrack* getFirstArmedAudioTrack();
+    MidiTrack* getFirstArmedMidiTrack();
+
+    mutable std::mutex modelMutex;
+    ProjectModel projectModel;
     juce::AudioFormatManager formatManager;
-    juce::AudioTransportSource transportSource;
-    std::unique_ptr<juce::AudioFormatReaderSource> readerSource;
     juce::File currentFile;
+    juce::File lastRecordingFile;
+    juce::AudioBuffer<float> renderBuffer;
+    juce::MidiBuffer midiBuffer;
+    SimpleSynth synth;
+    Metronome metronome;
+    AudioRecorder recorder;
+    juce::MidiKeyboardState* keyboardState = nullptr;
+
+    std::atomic<double> currentSampleRate { 44100.0 };
+    std::atomic<int64_t> transportSamplePosition { 0 };
+    std::atomic<TransportState> transportState { TransportState::Stopped };
+    std::atomic<float> masterGain { 0.8f };
+    std::atomic<bool> recordingMidi { false };
+    juce::MidiMessageSequence activeRecordingSequence;
+    double recordingStartBeats = 0.0;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AudioEngine)
 };
