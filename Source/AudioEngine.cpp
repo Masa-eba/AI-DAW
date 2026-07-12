@@ -2856,7 +2856,12 @@ void AudioEngine::renderToBuffer(juce::AudioBuffer<float>& buffer,
                                  bool includeMetronome)
 {
     midiBuffer.clear();
-    renderAudioTracks(buffer, numSamples, blockStartSeconds);
+    const auto state = transportState.load();
+    const auto transportRunning = state == TransportState::Playing
+                               || state == TransportState::Recording;
+
+    if (transportRunning)
+        renderAudioTracks(buffer, numSamples, blockStartSeconds);
 
     if (keyboardState != nullptr)
         keyboardState->processNextMidiBuffer(midiBuffer, 0, numSamples, true);
@@ -2875,9 +2880,12 @@ void AudioEngine::renderToBuffer(juce::AudioBuffer<float>& buffer,
         }
     }
 
-    renderMidiTracks(buffer, numSamples, blockStartSeconds, midiBuffer, synth);
+    if (transportRunning)
+        renderMidiTracks(buffer, numSamples, blockStartSeconds, midiBuffer, synth);
+    else
+        synth.renderNextBlock(buffer, midiBuffer, 0, numSamples);
 
-    if (includeMetronome)
+    if (includeMetronome && transportRunning)
         metronome.renderNextBlock(buffer, 0, numSamples, blockStartSeconds);
 }
 

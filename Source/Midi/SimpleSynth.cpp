@@ -191,5 +191,6 @@ void SimpleSynth::renderNextBlock(juce::AudioBuffer<float>& buffer,
 
 void SimpleSynth::allNotesOff()
 {
-    synth.allNotesOff(0, false);
+    for (auto channel = 1; channel <= 16; ++channel)
+        synth.allNotesOff(channel, false);
 }
