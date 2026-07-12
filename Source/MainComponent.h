@@ -54,6 +54,7 @@ private:
     void toggleSelectedTrackSolo();
     void moveSelectedTrack(int direction);
     void selectAdjacentTrack(int direction);
+    void fitProjectToView();
     void cycleSnapGrid(int direction);
     void updateSnapButtonText();
     void addMarkerAtPlayhead();

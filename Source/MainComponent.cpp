@@ -901,6 +901,12 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
         return true;
     }
 
+    if (key.getModifiers().isAltDown() && key.getKeyCode() == 'f')
+    {
+        fitProjectToView();
+        return true;
+    }
+
     if (key.getModifiers().isAltDown()
         && (key.getKeyCode() == juce::KeyPress::deleteKey
             || key.getKeyCode() == juce::KeyPress::backspaceKey))
@@ -1213,6 +1219,22 @@ void MainComponent::selectAdjacentTrack(int direction)
         return;
 
     trackSelector.setSelectedItemIndex(nextIndex, juce::sendNotificationSync);
+    timelineComponent.repaint();
+}
+
+void MainComponent::fitProjectToView()
+{
+    const auto length = audioEngine.getLength();
+
+    if (length <= 0.0)
+        return;
+
+    constexpr auto timelineLabelAndPadding = 190.0;
+    const auto visibleWidth = juce::jmax(1.0, static_cast<double>(timelineViewport.getWidth()) - timelineLabelAndPadding);
+    const auto fittedZoom = juce::jlimit(20.0, 500.0, visibleWidth / length);
+
+    zoomSlider.setValue(fittedZoom, juce::sendNotificationSync);
+    updateTimelineSize();
     timelineComponent.repaint();
 }
 
