@@ -91,6 +91,7 @@ private:
     void fadeInSelectedClip();
     void fadeOutSelectedClip();
     void adjustSelectedAudioClipFade(bool fadeIn, double deltaSeconds);
+    void setSelectedAudioClipFades(double fadeSeconds);
     void clearSelectedAudioClipFades();
     void quantizeSelectedMidiClip();
     void swingQuantizeSelectedMidiClip();

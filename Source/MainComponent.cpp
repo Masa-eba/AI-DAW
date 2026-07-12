@@ -718,6 +718,14 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
     }
 
     if (key.getModifiers().isCommandDown()
+        && key.getModifiers().isAltDown()
+        && key.getKeyCode() == 'b')
+    {
+        setSelectedAudioClipFades(0.05);
+        return true;
+    }
+
+    if (key.getModifiers().isCommandDown()
         && key.getModifiers().isShiftDown()
         && key.getKeyCode() == 'i')
     {
@@ -2461,6 +2469,30 @@ void MainComponent::adjustSelectedAudioClipFade(bool fadeIn, double deltaSeconds
                                        fadeOutSeconds))
     {
         showErrorMessage("Fade failed", "The selected audio clip fade could not be adjusted.");
+        return;
+    }
+
+    timelineComponent.repaint();
+}
+
+void MainComponent::setSelectedAudioClipFades(double fadeSeconds)
+{
+    const auto selectedClip = timelineComponent.getSelectedAudioClip();
+
+    if (! selectedClip.has_value())
+    {
+        showErrorMessage("No clip selected", "Select an audio clip before setting fades.");
+        return;
+    }
+
+    const auto safeFadeSeconds = juce::jlimit(0.0, 10.0, fadeSeconds);
+
+    if (! audioEngine.setAudioClipFade(selectedClip->first,
+                                       selectedClip->second,
+                                       safeFadeSeconds,
+                                       safeFadeSeconds))
+    {
+        showErrorMessage("Fade failed", "The selected audio clip fades could not be set.");
         return;
     }
 
