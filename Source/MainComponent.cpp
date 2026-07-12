@@ -583,6 +583,12 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
         return true;
     }
 
+    if (key.getKeyCode() == juce::KeyPress::endKey)
+    {
+        goToEnd();
+        return true;
+    }
+
     if (key.getModifiers().isCommandDown() && key.getKeyCode() == 'd')
     {
         if (key.getModifiers().isShiftDown())
@@ -1025,6 +1031,13 @@ void MainComponent::newProject()
 void MainComponent::goToStart()
 {
     audioEngine.setPosition(0.0);
+    updateTransportDisplay();
+    timelineComponent.setPosition(audioEngine.getPosition());
+}
+
+void MainComponent::goToEnd()
+{
+    audioEngine.setPosition(audioEngine.getLength());
     updateTransportDisplay();
     timelineComponent.setPosition(audioEngine.getPosition());
 }

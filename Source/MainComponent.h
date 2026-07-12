@@ -43,6 +43,7 @@ private:
     void redoProjectEdit();
     void newProject();
     void goToStart();
+    void goToEnd();
     void panicAllNotes();
     void renameSelectedTrack();
     void clearAllTrackMuteSolo();
