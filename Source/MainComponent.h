@@ -113,6 +113,7 @@ private:
     void generateAiChordsForSelectedTrack();
     void generateAiBassForSelectedTrack();
     void generateAiArpForSelectedTrack();
+    void generateAiDrumsForSelectedTrack();
     void exportMix();
     void exportSelectedTrack();
     void saveProject();

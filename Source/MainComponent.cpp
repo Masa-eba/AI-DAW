@@ -699,6 +699,14 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
     }
 
     if (key.getModifiers().isCommandDown()
+        && key.getModifiers().isAltDown()
+        && key.getKeyCode() == 'u')
+    {
+        generateAiDrumsForSelectedTrack();
+        return true;
+    }
+
+    if (key.getModifiers().isCommandDown()
         && key.getModifiers().isShiftDown()
         && key.getKeyCode() == 'g')
     {
@@ -2972,6 +2980,27 @@ void MainComponent::generateAiArpForSelectedTrack()
     if (! audioEngine.generateArpeggio(selected.id, "pop"))
     {
         showErrorMessage("AI Arp failed", "Could not generate a MIDI arpeggio.");
+        return;
+    }
+
+    timelineComponent.repaint();
+    updateTimelineSize();
+    updateTransportDisplay();
+}
+
+void MainComponent::generateAiDrumsForSelectedTrack()
+{
+    const auto selected = getSelectedTrack();
+
+    if (selected.type != TrackType::Midi)
+    {
+        showErrorMessage("Select MIDI track", "Select a MIDI track before generating drums.");
+        return;
+    }
+
+    if (! audioEngine.generateDrumPattern(selected.id, "pop"))
+    {
+        showErrorMessage("AI Drums failed", "Could not generate a MIDI drum pattern.");
         return;
     }
 

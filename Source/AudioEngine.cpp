@@ -1930,6 +1930,20 @@ bool AudioEngine::generateArpeggio(const TrackId& trackId, const juce::String& s
     return false;
 }
 
+bool AudioEngine::generateDrumPattern(const TrackId& trackId, const juce::String& style)
+{
+    std::scoped_lock lock(modelMutex);
+    saveUndoSnapshotNoLock();
+
+    if (auto* track = projectModel.findMidiTrack(trackId))
+    {
+        track->clips.push_back(createDrumPatternClip(style));
+        return true;
+    }
+
+    return false;
+}
+
 void AudioEngine::setMidiKeyboardState(juce::MidiKeyboardState* state)
 {
     keyboardState = state;
@@ -2633,6 +2647,53 @@ MidiClip AudioEngine::createArpeggioClip(const juce::String& style) const
             noteOff.setTimeStamp(beat + 0.18);
             clip.sequence.addEvent(noteOn);
             clip.sequence.addEvent(noteOff);
+        }
+    }
+
+    clip.sequence.updateMatchedPairs();
+    return clip;
+}
+
+MidiClip AudioEngine::createDrumPatternClip(const juce::String& style) const
+{
+    const auto normalized = style.toLowerCase();
+    const auto denseHats = normalized.contains("dense") || normalized.contains("trap");
+
+    MidiClip clip;
+    clip.id = juce::Uuid();
+    clip.startBeat = projectModel.getTempoMap().secondsToBeats(getPosition());
+    clip.lengthBeats = 16.0;
+
+    const auto addHit = [&clip](double beat, int note, juce::uint8 velocity, double length)
+    {
+        auto noteOn = juce::MidiMessage::noteOn(1, note, velocity);
+        noteOn.setTimeStamp(beat);
+        auto noteOff = juce::MidiMessage::noteOff(1, note);
+        noteOff.setTimeStamp(beat + length);
+        clip.sequence.addEvent(noteOn);
+        clip.sequence.addEvent(noteOff);
+    };
+
+    for (auto bar = 0; bar < 4; ++bar)
+    {
+        const auto barStart = static_cast<double>(bar) * 4.0;
+
+        addHit(barStart, 36, 112, 0.12);
+        addHit(barStart + 2.0, 38, 108, 0.12);
+        addHit(barStart + 3.0, 36, 96, 0.12);
+
+        if ((bar % 2) == 1)
+            addHit(barStart + 3.5, 38, 88, 0.10);
+
+        const auto hatStep = denseHats ? 0.25 : 0.5;
+        const auto hatCount = denseHats ? 16 : 8;
+
+        for (auto step = 0; step < hatCount; ++step)
+        {
+            const auto beat = barStart + static_cast<double>(step) * hatStep;
+            const auto velocity = (step % 2) == 0 ? static_cast<juce::uint8>(74)
+                                                  : static_cast<juce::uint8>(58);
+            addHit(beat, 42, velocity, 0.08);
         }
     }
 

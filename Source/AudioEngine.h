@@ -141,6 +141,7 @@ public:
     bool generateChordProgression(const TrackId& trackId, const juce::String& style);
     bool generateBassline(const TrackId& trackId, const juce::String& style);
     bool generateArpeggio(const TrackId& trackId, const juce::String& style);
+    bool generateDrumPattern(const TrackId& trackId, const juce::String& style);
 
     void setMidiKeyboardState(juce::MidiKeyboardState* state);
     bool saveProject(const juce::File& file);
@@ -184,6 +185,7 @@ private:
     MidiClip createChordProgressionClip(const juce::String& style) const;
     MidiClip createBasslineClip(const juce::String& style) const;
     MidiClip createArpeggioClip(const juce::String& style) const;
+    MidiClip createDrumPatternClip(const juce::String& style) const;
     AudioTrack* getFirstArmedAudioTrack();
     MidiTrack* getFirstArmedMidiTrack();
     void saveUndoSnapshotNoLock();
