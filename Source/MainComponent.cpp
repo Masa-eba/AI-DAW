@@ -985,6 +985,12 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
         return true;
     }
 
+    if (key.getModifiers().isAltDown() && key.getKeyCode() == '0')
+    {
+        resetSelectedTrackMix();
+        return true;
+    }
+
     if (key.getModifiers().isAltDown() && key.getKeyCode() == 'f')
     {
         fitProjectToView();
@@ -1647,6 +1653,15 @@ void MainComponent::toggleSelectedTrackSolo()
     }
 
     audioEngine.setTrackSolo(selected.id, ! solo);
+    updateSelectedTrackControls();
+    timelineComponent.repaint();
+}
+
+void MainComponent::resetSelectedTrackMix()
+{
+    const auto selected = getSelectedTrack();
+    audioEngine.setTrackGain(selected.id, 0.8f);
+    audioEngine.setTrackPan(selected.id, 0.0f);
     updateSelectedTrackControls();
     timelineComponent.repaint();
 }

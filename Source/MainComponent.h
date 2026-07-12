@@ -52,6 +52,7 @@ private:
     void toggleSelectedTrackArm();
     void toggleSelectedTrackMute();
     void toggleSelectedTrackSolo();
+    void resetSelectedTrackMix();
     void moveSelectedTrack(int direction);
     void selectAdjacentTrack(int direction);
     void fitProjectToView();
