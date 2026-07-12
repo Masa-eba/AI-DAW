@@ -60,12 +60,14 @@ ABE DAWは、C++20、JUCE、CMakeで開発しているmacOS向けのネイティ
   - Guitar
   - Drum
 - 画面鍵盤によるMIDI発音
+- 画面鍵盤の表示 / 非表示切替
 - PCキーボードによるMIDI発音
 - 外部MIDI入力デバイス選択
 - MIDI録音の基礎
 - MidiClipのノートプレビュー
 - MidiClipの選択 / 移動 / MIDIトラック間移動
 - MidiClipの右端トリム
+- `Piano Roll`ボタンまたはダブルクリックでMidiClip編集画面を開く
 - MidiClipのSplit
 - MidiClipの複製 / 削除
 - MidiClipのコピー / ペースト
@@ -88,7 +90,7 @@ ABE DAWは、C++20、JUCE、CMakeで開発しているmacOS向けのネイティ
 
 ### Piano Roll
 
-- MidiClipダブルクリックでPiano Rollを開く
+- MidiClip選択後の`Piano Roll`ボタン、またはMidiClipダブルクリックでPiano Rollを開く
 - ノート追加
 - ノート削除
 - ノート移動
@@ -150,12 +152,12 @@ ABE DAWの画面は上から順に機能別に分かれています。
 | --- | --- |
 | `PROJECT` | New、Demo Song、Open、Save、Export、トラック追加 |
 | `TRANSPORT` | Play、Stop、Record、Loop、BPM、Metronome、現在位置 |
-| `TRACK` | 選択トラック、Instrument、Import Audio、R/M/S、Volume、Pan |
-| `CLIP EDIT` | Duplicate、Delete、Split、Fade、Quantize、Snap、Zoom |
-| `AI / GENERATE` | AI MIDI生成、MIDI入力デバイス |
+| `TRACK` | 選択トラック、Instrument、Import Audio、R/M/S、Vol、Pan |
+| `CLIP EDIT` | Duplicate、Delete、Split、Fade、Quantize、Piano Roll、Snap、Zoom |
+| `AI / GENERATE` | Chords / Bass / Arp / Guitar / Drums / Fill / Melody生成、MIDI入力デバイス |
 | `Timeline` | Audio/MIDIクリップ編集、ドラッグ&ドロップ、シーク |
-| `OUTPUT` | Master、Mono、Peak、Reset Peak |
-| `KEYBOARD` | 画面鍵盤 |
+| `OUTPUT` | Master、Mono、Peak、Reset Peak、鍵盤表示切替 |
+| `KEYBOARD` | 画面鍵盤。`Hide Keys`で非表示にするとタイムラインを広く使えます |
 
 ボタンにマウスを乗せると、各機能の説明ツールチップが表示されます。
 
@@ -185,7 +187,7 @@ ABE DAWの画面は上から順に機能別に分かれています。
 
 ### 4. Piano RollでMIDIを編集する
 
-1. MidiClipをダブルクリックする
+1. MidiClipを選択して`Piano Roll`を押す、またはMidiClipをダブルクリックする
 2. 空いている場所をクリックしてノートを追加する
 3. ノートをドラッグして移動する
 4. ノート右端をドラッグして長さを変更する
@@ -196,7 +198,7 @@ ABE DAWの画面は上から順に機能別に分かれています。
 
 1. `+ MIDI Track`を押す
 2. MIDIトラックを選択する
-3. `AI Chords`、`AI Bass`、`AI Arp`、`AI Guitar`などを押す
+3. `AI Chords`、`AI Bass`、`AI Arp`、`AI Guitar`、`AI Drums`、`Drum Fill`、`AI Melody`などを押す
 4. 必要ならPiano Rollで編集する
 
 ### 6. 書き出す

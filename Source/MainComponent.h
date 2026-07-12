@@ -74,6 +74,7 @@ private:
     void soloOnlySelectedTrack();
     void resetSelectedTrackMix();
     void setSelectedMidiTrackInstrument(MidiInstrument instrument);
+    void openSelectedMidiClipPianoRoll();
     void openPianoRollForMidiClip(const TrackId& trackId, const juce::Uuid& clipId);
     void moveSelectedTrack(int direction);
     void selectAdjacentTrack(int direction);
@@ -181,6 +182,8 @@ private:
     juce::Label midiInputLabel;
     juce::Label trackLabel;
     juce::Label zoomLabel;
+    juce::Label trackVolumeLabel;
+    juce::Label trackPanLabel;
     juce::TextButton newProjectButton;
     juce::TextButton demoSongButton;
     juce::TextButton openProjectButton;
@@ -204,6 +207,10 @@ private:
     juce::TextButton aiBassButton;
     juce::TextButton aiArpButton;
     juce::TextButton aiGuitarButton;
+    juce::TextButton aiDrumsButton;
+    juce::TextButton aiDrumFillButton;
+    juce::TextButton aiMelodyButton;
+    juce::TextButton openPianoRollButton;
     juce::TextButton playPauseButton;
     juce::TextButton stopButton;
     juce::TextButton recordButton;
@@ -218,6 +225,7 @@ private:
     juce::Slider zoomSlider;
     juce::Slider masterVolumeSlider;
     juce::TextButton monoButton;
+    juce::TextButton keyboardToggleButton;
     juce::Slider trackVolumeSlider;
     juce::Slider trackPanSlider;
     juce::ComboBox trackSelector;
@@ -231,6 +239,7 @@ private:
     std::vector<double> tapTempoTimes;
     std::optional<ClipClipboard> clipClipboard;
     int snapGridIndex = 2;
+    bool keyboardVisible = true;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MainComponent)
 };

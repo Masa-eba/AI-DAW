@@ -90,6 +90,16 @@ MainComponent::MainComponent()
     zoomLabel.setColour(juce::Label::textColourId, juce::Colours::white);
     addAndMakeVisible(zoomLabel);
 
+    trackVolumeLabel.setText("Vol", juce::dontSendNotification);
+    trackVolumeLabel.setColour(juce::Label::textColourId, juce::Colours::lightgrey);
+    trackVolumeLabel.setJustificationType(juce::Justification::centredRight);
+    addAndMakeVisible(trackVolumeLabel);
+
+    trackPanLabel.setText("Pan", juce::dontSendNotification);
+    trackPanLabel.setColour(juce::Label::textColourId, juce::Colours::lightgrey);
+    trackPanLabel.setJustificationType(juce::Justification::centredRight);
+    addAndMakeVisible(trackPanLabel);
+
     newProjectButton.setButtonText("New");
     newProjectButton.onClick = [this] { newProject(); };
     addAndMakeVisible(newProjectButton);
@@ -208,6 +218,10 @@ MainComponent::MainComponent()
     quantizeMidiButton.onClick = [this] { quantizeSelectedMidiClip(); };
     addAndMakeVisible(quantizeMidiButton);
 
+    openPianoRollButton.setButtonText("Piano Roll");
+    openPianoRollButton.onClick = [this] { openSelectedMidiClipPianoRoll(); };
+    addAndMakeVisible(openPianoRollButton);
+
     snapButton.setClickingTogglesState(true);
     snapButton.setToggleState(true, juce::dontSendNotification);
     snapButton.onClick = [this]
@@ -233,6 +247,18 @@ MainComponent::MainComponent()
     aiGuitarButton.setButtonText("AI Guitar");
     aiGuitarButton.onClick = [this] { generateAiGuitarForSelectedTrack(); };
     addAndMakeVisible(aiGuitarButton);
+
+    aiDrumsButton.setButtonText("AI Drums");
+    aiDrumsButton.onClick = [this] { generateAiDrumsForSelectedTrack(); };
+    addAndMakeVisible(aiDrumsButton);
+
+    aiDrumFillButton.setButtonText("Drum Fill");
+    aiDrumFillButton.onClick = [this] { generateAiDrumFillForSelectedTrack(); };
+    addAndMakeVisible(aiDrumFillButton);
+
+    aiMelodyButton.setButtonText("AI Melody");
+    aiMelodyButton.onClick = [this] { generateAiMelodyForSelectedTrack(); };
+    addAndMakeVisible(aiMelodyButton);
 
     playPauseButton.setButtonText("Play");
     playPauseButton.onClick = [this]
@@ -372,6 +398,20 @@ MainComponent::MainComponent()
     };
     addAndMakeVisible(monoButton);
 
+    keyboardToggleButton.setButtonText("Hide Keys");
+    keyboardToggleButton.setClickingTogglesState(true);
+    keyboardToggleButton.setToggleState(true, juce::dontSendNotification);
+    keyboardToggleButton.onClick = [this]
+    {
+        keyboardVisible = keyboardToggleButton.getToggleState();
+        keyboardToggleButton.setButtonText(keyboardVisible ? "Hide Keys" : "Show Keys");
+        keyboardComponent.setVisible(keyboardVisible);
+        keyboardSectionLabel.setVisible(keyboardVisible);
+        resized();
+        repaint();
+    };
+    addAndMakeVisible(keyboardToggleButton);
+
     trackVolumeSlider.setSliderStyle(juce::Slider::LinearHorizontal);
     trackVolumeSlider.setTextBoxStyle(juce::Slider::TextBoxRight, false, 56, 22);
     trackVolumeSlider.setRange(0.0, 1.0, 0.01);
@@ -425,11 +465,15 @@ MainComponent::MainComponent()
     configureButton(fadeInButton, "Apply a one-second fade in to the selected audio clip.", editColour);
     configureButton(fadeOutButton, "Apply a one-second fade out to the selected audio clip.", editColour);
     configureButton(quantizeMidiButton, "Quantize the selected MIDI clip to the current grid.", editColour);
+    configureButton(openPianoRollButton, "Open the selected MIDI clip in the Piano Roll editor.", editColour);
     configureButton(snapButton, "Toggle timeline snapping and show the current grid size.", editColour);
     configureButton(aiChordsButton, "Generate a MIDI chord progression on the selected MIDI track.", aiColour);
     configureButton(aiBassButton, "Generate a bassline on the selected MIDI track.", aiColour);
     configureButton(aiArpButton, "Generate an arpeggio on the selected MIDI track.", aiColour);
     configureButton(aiGuitarButton, "Generate a guitar strum part on the selected MIDI track.", aiColour);
+    configureButton(aiDrumsButton, "Generate a drum groove on the selected MIDI track.", aiColour);
+    configureButton(aiDrumFillButton, "Generate a short drum fill on the selected MIDI track.", aiColour);
+    configureButton(aiMelodyButton, "Generate a lead melody on the selected MIDI track.", aiColour);
     configureButton(playPauseButton, "Start playback or pause at the current position.", transportColour);
     configureButton(stopButton, "Stop playback and return to the start.", editColour);
     configureButton(recordButton, "Record into the armed Audio or MIDI track.", dangerColour);
@@ -441,6 +485,7 @@ MainComponent::MainComponent()
     configureButton(muteButton, "Mute the selected track.", editColour);
     configureButton(soloButton, "Solo the selected track.", editColour);
     configureButton(monoButton, "Monitor the master output in mono.", editColour);
+    configureButton(keyboardToggleButton, "Show or hide the on-screen keyboard to give the timeline more space.", editColour);
     trackSelector.setTooltip("Select the active track for editing and recording.");
     instrumentSelector.setTooltip("Choose the selected MIDI track sound.");
     midiInputSelector.setTooltip("Choose an external MIDI input device.");
@@ -640,9 +685,11 @@ void MainComponent::resized()
     place(trackBar, armButton, 34);
     place(trackBar, muteButton, 34);
     place(trackBar, soloButton, 34);
-    trackVolumeSlider.setBounds(trackBar.removeFromLeft(174).reduced(0, 4));
+    trackVolumeLabel.setBounds(trackBar.removeFromLeft(30));
+    trackVolumeSlider.setBounds(trackBar.removeFromLeft(146).reduced(0, 4));
     trackBar.removeFromLeft(7);
-    trackPanSlider.setBounds(trackBar.removeFromLeft(154).reduced(0, 4));
+    trackPanLabel.setBounds(trackBar.removeFromLeft(34));
+    trackPanSlider.setBounds(trackBar.removeFromLeft(138).reduced(0, 4));
 
     area.removeFromTop(rowGap);
     auto clipBar = takeRow(clipSectionLabel);
@@ -652,6 +699,7 @@ void MainComponent::resized()
     place(clipBar, fadeInButton, 74);
     place(clipBar, fadeOutButton, 80);
     place(clipBar, quantizeMidiButton, 82);
+    place(clipBar, openPianoRollButton, 96);
     place(clipBar, snapButton, 96);
     zoomLabel.setBounds(clipBar.removeFromLeft(44));
     zoomSlider.setBounds(clipBar.removeFromLeft(170).reduced(0, 4));
@@ -662,12 +710,15 @@ void MainComponent::resized()
     place(aiBar, aiBassButton, 78);
     place(aiBar, aiArpButton, 72);
     place(aiBar, aiGuitarButton, 84);
+    place(aiBar, aiDrumsButton, 84);
+    place(aiBar, aiDrumFillButton, 82);
+    place(aiBar, aiMelodyButton, 88);
     aiBar.removeFromLeft(12);
     midiInputLabel.setBounds(aiBar.removeFromLeft(82));
     midiInputSelector.setBounds(aiBar.removeFromLeft(260).reduced(0, 4));
 
     area.removeFromTop(8);
-    auto bottom = area.removeFromBottom(138);
+    auto bottom = area.removeFromBottom(keyboardVisible ? 138 : 44);
     timelineViewport.setBounds(area);
 
     auto outputBar = bottom.removeFromTop(40);
@@ -679,10 +730,17 @@ void MainComponent::resized()
     peakLabel.setBounds(outputBar.removeFromLeft(120));
     outputBar.removeFromLeft(8);
     place(outputBar, resetPeakButton, 96);
+    place(outputBar, keyboardToggleButton, 88);
 
-    auto keyboardArea = bottom;
-    keyboardSectionLabel.setBounds(keyboardArea.removeFromLeft(labelWidth));
-    keyboardComponent.setBounds(keyboardArea.reduced(0, 8));
+    keyboardSectionLabel.setVisible(keyboardVisible);
+    keyboardComponent.setVisible(keyboardVisible);
+
+    if (keyboardVisible)
+    {
+        auto keyboardArea = bottom;
+        keyboardSectionLabel.setBounds(keyboardArea.removeFromLeft(labelWidth));
+        keyboardComponent.setBounds(keyboardArea.reduced(0, 8));
+    }
     updateTimelineSize();
 }
 
@@ -2204,6 +2262,20 @@ void MainComponent::setSelectedMidiTrackInstrument(MidiInstrument instrument)
     audioEngine.setMidiTrackInstrument(selected.id, instrument);
     keyboardComponent.setMidiChannel(midiInstrumentToChannel(instrument));
     timelineComponent.repaint();
+}
+
+void MainComponent::openSelectedMidiClipPianoRoll()
+{
+    const auto selectedMidiClip = timelineComponent.getSelectedMidiClip();
+
+    if (! selectedMidiClip.has_value())
+    {
+        showErrorMessage("No MIDI clip selected",
+                         "Select a MIDI clip on the timeline before opening Piano Roll.");
+        return;
+    }
+
+    openPianoRollForMidiClip(selectedMidiClip->first, selectedMidiClip->second);
 }
 
 void MainComponent::openPianoRollForMidiClip(const TrackId& trackId, const juce::Uuid& clipId)
