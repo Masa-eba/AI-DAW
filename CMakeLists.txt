@@ -24,7 +24,8 @@ juce_add_gui_app(MiniDAW
 target_sources(MiniDAW
     PRIVATE
         Source/Main.cpp
-        Source/MainComponent.cpp)
+        Source/MainComponent.cpp
+        Source/AudioEngine.cpp)
 
 target_include_directories(MiniDAW
     PRIVATE
