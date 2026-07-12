@@ -726,6 +726,14 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
 
     if (key.getModifiers().isCommandDown()
         && key.getModifiers().isAltDown()
+        && key.getKeyCode() == 'y')
+    {
+        generateAiMelodyForSelectedTrack();
+        return true;
+    }
+
+    if (key.getModifiers().isCommandDown()
+        && key.getModifiers().isAltDown()
         && key.getModifiers().isShiftDown()
         && key.getKeyCode() == 'p')
     {
@@ -3376,6 +3384,27 @@ void MainComponent::generateAiDrumsForSelectedTrack()
     if (! audioEngine.generateDrumPattern(selected.id, "pop"))
     {
         showErrorMessage("AI Drums failed", "Could not generate a MIDI drum pattern.");
+        return;
+    }
+
+    timelineComponent.repaint();
+    updateTimelineSize();
+    updateTransportDisplay();
+}
+
+void MainComponent::generateAiMelodyForSelectedTrack()
+{
+    const auto selected = getSelectedTrack();
+
+    if (selected.type != TrackType::Midi)
+    {
+        showErrorMessage("Select MIDI track", "Select a MIDI track before generating a melody.");
+        return;
+    }
+
+    if (! audioEngine.generateMelody(selected.id, "pop"))
+    {
+        showErrorMessage("AI Melody failed", "Could not generate a MIDI melody.");
         return;
     }
 

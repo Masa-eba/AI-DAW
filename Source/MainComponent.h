@@ -136,6 +136,7 @@ private:
     void generateAiBassForSelectedTrack();
     void generateAiArpForSelectedTrack();
     void generateAiDrumsForSelectedTrack();
+    void generateAiMelodyForSelectedTrack();
     void exportMix();
     void exportSelectedTrack();
     void saveProject();

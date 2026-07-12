@@ -2167,6 +2167,20 @@ bool AudioEngine::generateDrumPattern(const TrackId& trackId, const juce::String
     return false;
 }
 
+bool AudioEngine::generateMelody(const TrackId& trackId, const juce::String& style)
+{
+    std::scoped_lock lock(modelMutex);
+    saveUndoSnapshotNoLock();
+
+    if (auto* track = projectModel.findMidiTrack(trackId))
+    {
+        track->clips.push_back(createMelodyClip(style));
+        return true;
+    }
+
+    return false;
+}
+
 void AudioEngine::setMidiKeyboardState(juce::MidiKeyboardState* state)
 {
     keyboardState = state;
@@ -2919,6 +2933,69 @@ MidiClip AudioEngine::createDrumPatternClip(const juce::String& style) const
             addHit(beat, 42, velocity, 0.08);
         }
     }
+
+    clip.sequence.updateMatchedPairs();
+    return clip;
+}
+
+MidiClip AudioEngine::createMelodyClip(const juce::String& style) const
+{
+    const auto normalized = style.toLowerCase();
+    const std::array<int, 7> majorScale { 60, 62, 64, 65, 67, 69, 71 };
+    const std::array<int, 7> minorScale { 57, 59, 60, 62, 64, 65, 67 };
+    const auto& scale = normalized.contains("minor") ? minorScale : majorScale;
+
+    struct MelodyStep
+    {
+        double beat;
+        int degree;
+        double length;
+        juce::uint8 velocity;
+    };
+
+    const std::array<MelodyStep, 16> phrase {
+        MelodyStep { 0.0, 0, 0.45, 92 },
+        MelodyStep { 0.5, 2, 0.45, 84 },
+        MelodyStep { 1.0, 4, 0.9, 96 },
+        MelodyStep { 2.0, 5, 0.45, 82 },
+        MelodyStep { 2.5, 4, 0.45, 88 },
+        MelodyStep { 3.0, 2, 0.8, 86 },
+        MelodyStep { 4.0, 4, 0.45, 94 },
+        MelodyStep { 4.5, 6, 0.45, 86 },
+        MelodyStep { 5.0, 7, 0.9, 100 },
+        MelodyStep { 6.0, 6, 0.45, 82 },
+        MelodyStep { 6.5, 4, 0.45, 88 },
+        MelodyStep { 7.0, 2, 0.8, 84 },
+        MelodyStep { 8.0, 5, 0.45, 92 },
+        MelodyStep { 8.5, 4, 0.45, 86 },
+        MelodyStep { 9.0, 2, 0.9, 90 },
+        MelodyStep { 10.0, 0, 1.8, 96 }
+    };
+
+    MidiClip clip;
+    clip.id = juce::Uuid();
+    clip.startBeat = projectModel.getTempoMap().secondsToBeats(getPosition());
+    clip.lengthBeats = 16.0;
+
+    const auto addNote = [&clip, &scale](double beat, int degree, double length, juce::uint8 velocity)
+    {
+        const auto octaveOffset = degree >= static_cast<int>(scale.size()) ? 12 : 0;
+        const auto scaleIndex = static_cast<size_t>(juce::jlimit(0, static_cast<int>(scale.size()) - 1, degree % static_cast<int>(scale.size())));
+        const auto note = scale[scaleIndex] + octaveOffset + 12;
+        auto noteOn = juce::MidiMessage::noteOn(1, note, velocity);
+        noteOn.setTimeStamp(beat);
+        auto noteOff = juce::MidiMessage::noteOff(1, note);
+        noteOff.setTimeStamp(juce::jmin(16.0, beat + length));
+        clip.sequence.addEvent(noteOn);
+        clip.sequence.addEvent(noteOff);
+    };
+
+    for (const auto& step : phrase)
+        addNote(step.beat, step.degree, step.length, step.velocity);
+
+    for (const auto& step : phrase)
+        if (step.beat + 12.0 < 16.0)
+            addNote(step.beat + 12.0, juce::jmax(0, step.degree - 1), step.length, static_cast<juce::uint8>(juce::jmax(70, static_cast<int>(step.velocity) - 8)));
 
     clip.sequence.updateMatchedPairs();
     return clip;
