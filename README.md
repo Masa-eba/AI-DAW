@@ -3,6 +3,8 @@
 ABE DAWは、C++20、JUCE、CMakeで開発しているmacOS向けのネイティブDTMアプリです。
 複数Audio/MIDIトラック、タイムライン編集、録音、簡易シンセ、Piano Roll、ローカルAI MIDI生成、WAV書き出し、プロジェクト保存を扱えます。
 
+![ABE DAW main window](docs/images/abe-daw-main.svg)
+
 ## できること
 
 ### プロジェクト
