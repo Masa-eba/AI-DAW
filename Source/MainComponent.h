@@ -67,6 +67,7 @@ private:
     void importAudioToSelectedTrack();
     void nudgeSelectedClip(int direction);
     void trimSelectedClipEnd(int direction);
+    void movePlayheadToSelectedClipBoundary(bool endBoundary);
     void moveSelectedClipToPlayhead();
     void adjustSelectedAudioClipGain(float delta);
     void normalizeSelectedAudioClip();

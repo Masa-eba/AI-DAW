@@ -195,6 +195,7 @@ open build/MiniDAW_artefacts/AI-DAW.app
 - `Command + Option + D`: 選択中トラックを複製
 - `Command + ← / →`: 選択中AudioClip / MidiClipを現在のスナップグリッド単位で左右へ移動
 - `Command + Shift + ← / →`: 選択中AudioClip / MidiClipの右端を現在のスナップグリッド単位で伸縮
+- `Command + Option + ← / →`: 再生位置を選択中AudioClip / MidiClipの先頭 / 末尾へ移動
 - `Command + J`: 選択中AudioClip / MidiClipを再生位置へ移動
 - `Option + ← / →`: 再生位置を前後の拍へ移動
 - `Option + Shift + ← / →`: 再生位置を前後の小節へ移動

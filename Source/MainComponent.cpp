@@ -797,6 +797,22 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
         return true;
     }
 
+    if (key.getModifiers().isCommandDown()
+        && key.getModifiers().isAltDown()
+        && key.getKeyCode() == juce::KeyPress::leftKey)
+    {
+        movePlayheadToSelectedClipBoundary(false);
+        return true;
+    }
+
+    if (key.getModifiers().isCommandDown()
+        && key.getModifiers().isAltDown()
+        && key.getKeyCode() == juce::KeyPress::rightKey)
+    {
+        movePlayheadToSelectedClipBoundary(true);
+        return true;
+    }
+
     if (key.getModifiers().isCommandDown() && key.getKeyCode() == juce::KeyPress::leftKey)
     {
         nudgeSelectedClip(-1);
@@ -1711,6 +1727,43 @@ void MainComponent::trimSelectedClipEnd(int direction)
     }
 
     showErrorMessage("No clip selected", "Select an audio or MIDI clip before trimming.");
+}
+
+void MainComponent::movePlayheadToSelectedClipBoundary(bool endBoundary)
+{
+    if (const auto selectedAudioClip = timelineComponent.getSelectedAudioClip())
+    {
+        if (const auto* track = audioEngine.getProjectModel().findAudioTrack(selectedAudioClip->first))
+            for (const auto& clip : track->clips)
+                if (clip.id == selectedAudioClip->second)
+                {
+                    audioEngine.setPosition(endBoundary
+                        ? clip.startTimeSeconds + clip.lengthSeconds
+                        : clip.startTimeSeconds);
+                    updateTransportDisplay();
+                    timelineComponent.setPosition(audioEngine.getPosition());
+                    return;
+                }
+    }
+
+    if (const auto selectedMidiClip = timelineComponent.getSelectedMidiClip())
+    {
+        const auto& tempo = audioEngine.getProjectModel().getTempoMap();
+
+        if (const auto* track = audioEngine.getProjectModel().findMidiTrack(selectedMidiClip->first))
+            for (const auto& clip : track->clips)
+                if (clip.id == selectedMidiClip->second)
+                {
+                    audioEngine.setPosition(tempo.beatsToSeconds(endBoundary
+                        ? clip.startBeat + clip.lengthBeats
+                        : clip.startBeat));
+                    updateTransportDisplay();
+                    timelineComponent.setPosition(audioEngine.getPosition());
+                    return;
+                }
+    }
+
+    showErrorMessage("No clip selected", "Select an audio or MIDI clip before moving the playhead.");
 }
 
 void MainComponent::moveSelectedClipToPlayhead()
