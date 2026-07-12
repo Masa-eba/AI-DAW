@@ -9,6 +9,8 @@ public:
     void setBpm(double newBpm);
     void setEnabled(bool shouldBeEnabled);
     bool isEnabled() const;
+    void setGain(float newGain);
+    float getGain() const;
     void reset(double positionSeconds);
     void renderNextBlock(juce::AudioBuffer<float>& buffer,
                          int startSample,
@@ -23,4 +25,5 @@ private:
     double nextBeatTimeSeconds = 0.0;
     int beatIndex = 0;
     bool enabled = false;
+    float gain = 1.0f;
 };

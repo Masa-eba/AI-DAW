@@ -322,6 +322,16 @@ bool AudioEngine::isMetronomeEnabled() const
     return metronome.isEnabled();
 }
 
+void AudioEngine::setMetronomeGain(float gain)
+{
+    metronome.setGain(gain);
+}
+
+float AudioEngine::getMetronomeGain() const
+{
+    return metronome.getGain();
+}
+
 void AudioEngine::setLoopEnabled(bool enabled)
 {
     loopEnabled.store(enabled);

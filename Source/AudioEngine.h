@@ -59,6 +59,8 @@ public:
     void resetHeldOutputPeak();
     void setMetronomeEnabled(bool enabled);
     bool isMetronomeEnabled() const;
+    void setMetronomeGain(float gain);
+    float getMetronomeGain() const;
     void setLoopEnabled(bool enabled);
     void setLoopRange(double startSeconds, double endSeconds);
     void clearLoopRange();

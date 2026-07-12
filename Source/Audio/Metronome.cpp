@@ -22,6 +22,16 @@ bool Metronome::isEnabled() const
     return enabled;
 }
 
+void Metronome::setGain(float newGain)
+{
+    gain = juce::jlimit(0.0f, 1.0f, newGain);
+}
+
+float Metronome::getGain() const
+{
+    return gain;
+}
+
 void Metronome::reset(double positionSeconds)
 {
     const auto secondsPerBeat = 60.0 / bpm;
@@ -65,7 +75,7 @@ void Metronome::renderNextBlock(juce::AudioBuffer<float>& buffer,
 void Metronome::renderClick(juce::AudioBuffer<float>& buffer, int sampleOffset, bool downbeat)
 {
     const auto frequency = downbeat ? 1500.0 : 1000.0;
-    const auto amplitude = downbeat ? 0.45f : 0.25f;
+    const auto amplitude = (downbeat ? 0.45f : 0.25f) * gain;
     const auto durationSamples = static_cast<int>(sampleRate * 0.035);
 
     for (auto sample = 0; sample < durationSamples; ++sample)

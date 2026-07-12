@@ -907,6 +907,18 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
         return true;
     }
 
+    if (key.getModifiers().isAltDown() && key.getKeyCode() == '=')
+    {
+        adjustMetronomeGain(0.1f);
+        return true;
+    }
+
+    if (key.getModifiers().isAltDown() && key.getKeyCode() == '-')
+    {
+        adjustMetronomeGain(-0.1f);
+        return true;
+    }
+
     if (key.getModifiers().isAltDown()
         && (key.getKeyCode() == juce::KeyPress::deleteKey
             || key.getKeyCode() == juce::KeyPress::backspaceKey))
@@ -1236,6 +1248,13 @@ void MainComponent::fitProjectToView()
     zoomSlider.setValue(fittedZoom, juce::sendNotificationSync);
     updateTimelineSize();
     timelineComponent.repaint();
+}
+
+void MainComponent::adjustMetronomeGain(float delta)
+{
+    const auto gain = juce::jlimit(0.0f, 1.0f, audioEngine.getMetronomeGain() + delta);
+    audioEngine.setMetronomeGain(gain);
+    metronomeButton.setButtonText("Metro " + juce::String(static_cast<int>(std::round(gain * 100.0f))) + "%");
 }
 
 void MainComponent::cycleSnapGrid(int direction)
