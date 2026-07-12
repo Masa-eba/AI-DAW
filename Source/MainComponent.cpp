@@ -201,6 +201,10 @@ MainComponent::MainComponent()
     };
     addAndMakeVisible(metronomeButton);
 
+    panicButton.setButtonText("Panic");
+    panicButton.onClick = [this] { panicAllNotes(); };
+    addAndMakeVisible(panicButton);
+
     armButton.setButtonText("R");
     armButton.setClickingTogglesState(true);
     armButton.onClick = [this]
@@ -435,6 +439,8 @@ void MainComponent::resized()
     transportBar.removeFromLeft(8);
     metronomeButton.setBounds(transportBar.removeFromLeft(112).reduced(0, 5));
     transportBar.removeFromLeft(12);
+    panicButton.setBounds(transportBar.removeFromLeft(72).reduced(0, 5));
+    transportBar.removeFromLeft(12);
     positionLabel.setBounds(transportBar);
 
     auto trackBar = area.removeFromTop(44);
@@ -503,6 +509,12 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
         else
             undoProjectEdit();
 
+        return true;
+    }
+
+    if (key.getKeyCode() == juce::KeyPress::escapeKey)
+    {
+        panicAllNotes();
         return true;
     }
 
@@ -786,6 +798,15 @@ void MainComponent::newProject()
         component->updateTransportDisplay();
         component->timelineComponent.repaint();
     });
+}
+
+void MainComponent::panicAllNotes()
+{
+    for (const auto note : activeComputerKeyboardNotes)
+        keyboardState.noteOff(1, note, 0.0f);
+
+    activeComputerKeyboardNotes.clear();
+    audioEngine.panic();
 }
 
 void MainComponent::renameSelectedTrack()

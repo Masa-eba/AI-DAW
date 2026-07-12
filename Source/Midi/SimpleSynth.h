@@ -37,6 +37,7 @@ public:
                          juce::MidiBuffer& midiMessages,
                          int startSample,
                          int numSamples);
+    void allNotesOff();
 
 private:
     juce::Synthesiser synth;

@@ -134,6 +134,7 @@ void AudioEngine::pause()
         stopRecording();
 
     transportState.store(TransportState::Paused);
+    panic();
 }
 
 void AudioEngine::stop()
@@ -144,6 +145,19 @@ void AudioEngine::stop()
     transportState.store(TransportState::Stopped);
     transportSamplePosition.store(0);
     metronome.reset(0.0);
+    panic();
+}
+
+void AudioEngine::panic()
+{
+    std::scoped_lock lock(modelMutex);
+    midiBuffer.clear();
+    synth.allNotesOff();
+
+    if (keyboardState != nullptr)
+        for (auto channel = 1; channel <= 16; ++channel)
+            for (auto note = 0; note < 128; ++note)
+                keyboardState->noteOff(channel, note, 0.0f);
 }
 
 bool AudioEngine::startRecording()

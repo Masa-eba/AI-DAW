@@ -42,6 +42,7 @@ private:
     void undoProjectEdit();
     void redoProjectEdit();
     void newProject();
+    void panicAllNotes();
     void renameSelectedTrack();
     void loopSelectedClip();
     void importAudioToSelectedTrack();
@@ -104,6 +105,7 @@ private:
     juce::TextButton loopButton;
     juce::TextButton loopClipButton;
     juce::TextButton metronomeButton;
+    juce::TextButton panicButton;
     juce::TextButton armButton;
     juce::TextButton muteButton;
     juce::TextButton soloButton;

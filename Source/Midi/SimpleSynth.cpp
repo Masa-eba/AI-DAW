@@ -95,3 +95,8 @@ void SimpleSynth::renderNextBlock(juce::AudioBuffer<float>& buffer,
 {
     synth.renderNextBlock(buffer, midiMessages, startSample, numSamples);
 }
+
+void SimpleSynth::allNotesOff()
+{
+    synth.allNotesOff(0, false);
+}
