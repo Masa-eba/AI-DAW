@@ -50,6 +50,7 @@ private:
     void clearAllTrackMuteSolo();
     void clearAllTrackArms();
     void moveSelectedTrack(int direction);
+    void selectAdjacentTrack(int direction);
     void cycleSnapGrid(int direction);
     void updateSnapButtonText();
     void addMarkerAtPlayhead();

@@ -841,6 +841,18 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
         return true;
     }
 
+    if (key.getModifiers().isAltDown() && key.getKeyCode() == juce::KeyPress::upKey)
+    {
+        selectAdjacentTrack(-1);
+        return true;
+    }
+
+    if (key.getModifiers().isAltDown() && key.getKeyCode() == juce::KeyPress::downKey)
+    {
+        selectAdjacentTrack(1);
+        return true;
+    }
+
     if (key.getKeyCode() == juce::KeyPress::deleteKey
         || key.getKeyCode() == juce::KeyPress::backspaceKey)
     {
@@ -1099,6 +1111,23 @@ void MainComponent::moveSelectedTrack(int direction)
     refreshTrackSelector();
     selectTrackById(selected.id);
     updateTimelineSize();
+    timelineComponent.repaint();
+}
+
+void MainComponent::selectAdjacentTrack(int direction)
+{
+    const auto numItems = trackSelector.getNumItems();
+
+    if (numItems <= 0 || direction == 0)
+        return;
+
+    const auto currentIndex = juce::jlimit(0, numItems - 1, trackSelector.getSelectedItemIndex());
+    const auto nextIndex = juce::jlimit(0, numItems - 1, currentIndex + (direction < 0 ? -1 : 1));
+
+    if (nextIndex == currentIndex)
+        return;
+
+    trackSelector.setSelectedItemIndex(nextIndex, juce::sendNotificationSync);
     timelineComponent.repaint();
 }
 
