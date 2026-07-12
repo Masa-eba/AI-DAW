@@ -159,8 +159,14 @@ MainComponent::MainComponent()
     loopButton.onClick = [this]
     {
         audioEngine.setLoopEnabled(loopButton.getToggleState());
+        if (! loopButton.getToggleState())
+            audioEngine.clearLoopRange();
     };
     addAndMakeVisible(loopButton);
+
+    loopClipButton.setButtonText("Loop Clip");
+    loopClipButton.onClick = [this] { loopSelectedClip(); };
+    addAndMakeVisible(loopClipButton);
 
     metronomeButton.setButtonText("Metronome");
     metronomeButton.setClickingTogglesState(true);
@@ -383,6 +389,8 @@ void MainComponent::resized()
     recordButton.setBounds(transportBar.removeFromLeft(92).reduced(0, 5));
     transportBar.removeFromLeft(12);
     loopButton.setBounds(transportBar.removeFromLeft(72).reduced(0, 5));
+    transportBar.removeFromLeft(8);
+    loopClipButton.setBounds(transportBar.removeFromLeft(92).reduced(0, 5));
     transportBar.removeFromLeft(8);
     bpmLabel.setBounds(transportBar.removeFromLeft(38));
     bpmSlider.setBounds(transportBar.removeFromLeft(160).reduced(0, 4));
@@ -671,6 +679,45 @@ void MainComponent::redoProjectEdit()
     updateTimelineSize();
     updateTransportDisplay();
     timelineComponent.repaint();
+}
+
+void MainComponent::loopSelectedClip()
+{
+    if (const auto selectedAudioClip = timelineComponent.getSelectedAudioClip())
+    {
+        if (const auto* track = audioEngine.getProjectModel().findAudioTrack(selectedAudioClip->first))
+            for (const auto& clip : track->clips)
+                if (clip.id == selectedAudioClip->second)
+                {
+                    audioEngine.setLoopRange(clip.startTimeSeconds,
+                                             clip.startTimeSeconds + clip.lengthSeconds);
+                    audioEngine.setPosition(clip.startTimeSeconds);
+                    loopButton.setToggleState(true, juce::dontSendNotification);
+                    updateTransportDisplay();
+                    timelineComponent.repaint();
+                    return;
+                }
+    }
+
+    if (const auto selectedMidiClip = timelineComponent.getSelectedMidiClip())
+    {
+        if (const auto* track = audioEngine.getProjectModel().findMidiTrack(selectedMidiClip->first))
+            for (const auto& clip : track->clips)
+                if (clip.id == selectedMidiClip->second)
+                {
+                    const auto& tempo = audioEngine.getProjectModel().getTempoMap();
+                    const auto startSeconds = tempo.beatsToSeconds(clip.startBeat);
+                    const auto endSeconds = tempo.beatsToSeconds(clip.startBeat + clip.lengthBeats);
+                    audioEngine.setLoopRange(startSeconds, endSeconds);
+                    audioEngine.setPosition(startSeconds);
+                    loopButton.setToggleState(true, juce::dontSendNotification);
+                    updateTransportDisplay();
+                    timelineComponent.repaint();
+                    return;
+                }
+    }
+
+    showErrorMessage("No clip selected", "Select an audio or MIDI clip before setting a clip loop.");
 }
 
 void MainComponent::importAudioToSelectedTrack()

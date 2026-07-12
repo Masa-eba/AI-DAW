@@ -223,6 +223,28 @@ void AudioEngine::setLoopEnabled(bool enabled)
     loopEnabled.store(enabled);
 }
 
+void AudioEngine::setLoopRange(double startSeconds, double endSeconds)
+{
+    if (! std::isfinite(startSeconds) || startSeconds < 0.0)
+        startSeconds = 0.0;
+
+    if (! std::isfinite(endSeconds) || endSeconds <= startSeconds)
+    {
+        clearLoopRange();
+        return;
+    }
+
+    loopStartSeconds.store(startSeconds);
+    loopEndSeconds.store(endSeconds);
+    loopEnabled.store(true);
+}
+
+void AudioEngine::clearLoopRange()
+{
+    loopStartSeconds.store(0.0);
+    loopEndSeconds.store(0.0);
+}
+
 bool AudioEngine::isLoopEnabled() const
 {
     return loopEnabled.load();
@@ -854,10 +876,16 @@ void AudioEngine::audioDeviceIOCallbackWithContext(const float* const* inputChan
         const auto nextPosition = transportSamplePosition.load() + numSamples;
         transportSamplePosition.store(nextPosition);
 
-        if (getLength() > 0.0 && getPosition() >= getLength())
+        const auto length = getLength();
+        const auto loopStart = loopStartSeconds.load();
+        const auto loopEnd = loopEndSeconds.load();
+        const auto hasCustomLoopRange = loopEnd > loopStart;
+        const auto endPosition = hasCustomLoopRange ? loopEnd : length;
+
+        if (endPosition > 0.0 && getPosition() >= endPosition)
         {
             if (loopEnabled.load())
-                setPosition(0.0);
+                setPosition(hasCustomLoopRange ? loopStart : 0.0);
             else
                 stop();
         }

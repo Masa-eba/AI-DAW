@@ -41,6 +41,7 @@ private:
     void updateTimelineSize();
     void undoProjectEdit();
     void redoProjectEdit();
+    void loopSelectedClip();
     void importAudioToSelectedTrack();
     void duplicateSelectedClip();
     void deleteSelectedClip();
@@ -93,6 +94,7 @@ private:
     juce::TextButton stopButton;
     juce::TextButton recordButton;
     juce::TextButton loopButton;
+    juce::TextButton loopClipButton;
     juce::TextButton metronomeButton;
     juce::TextButton armButton;
     juce::TextButton muteButton;
