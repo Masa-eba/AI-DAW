@@ -207,6 +207,7 @@ open build/MiniDAW_artefacts/AI-DAW.app
 - `Option + ↑ / ↓`: 前後のトラックを選択
 - `Option + Shift + ↑ / ↓`: 選択中トラックを同種トラック内で上下へ移動
 - `Option + R / M / S`: 選択中トラックのRecord Arm / Mute / Soloを切替
+- `Option + Shift + S`: 選択中トラックだけをSoloにする
 - `Option + 0`: 選択中トラックのVolume / Panを基準値へ戻す
 - `Option + F`: プロジェクト全体が見えるようにTimeline Zoomを調整
 - `Option + = / -`: メトロノーム音量を上下

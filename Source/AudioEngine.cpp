@@ -464,6 +464,18 @@ void AudioEngine::setTrackSolo(const TrackId& trackId, bool solo)
         midiTrack->state.solo = solo;
 }
 
+void AudioEngine::soloOnlyTrack(const TrackId& trackId)
+{
+    std::scoped_lock lock(modelMutex);
+    saveUndoSnapshotNoLock();
+
+    for (auto& track : projectModel.getAudioTracks())
+        track->state.solo = track->state.id == trackId;
+
+    for (auto& track : projectModel.getMidiTracks())
+        track->state.solo = track->state.id == trackId;
+}
+
 void AudioEngine::setTrackArmed(const TrackId& trackId, bool armed)
 {
     std::scoped_lock lock(modelMutex);

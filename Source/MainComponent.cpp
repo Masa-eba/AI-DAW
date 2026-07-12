@@ -1003,6 +1003,14 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
         return true;
     }
 
+    if (key.getModifiers().isAltDown()
+        && key.getModifiers().isShiftDown()
+        && key.getKeyCode() == 's')
+    {
+        soloOnlySelectedTrack();
+        return true;
+    }
+
     if (key.getModifiers().isAltDown() && key.getKeyCode() == 's')
     {
         toggleSelectedTrackSolo();
@@ -1677,6 +1685,14 @@ void MainComponent::toggleSelectedTrackSolo()
     }
 
     audioEngine.setTrackSolo(selected.id, ! solo);
+    updateSelectedTrackControls();
+    timelineComponent.repaint();
+}
+
+void MainComponent::soloOnlySelectedTrack()
+{
+    const auto selected = getSelectedTrack();
+    audioEngine.soloOnlyTrack(selected.id);
     updateSelectedTrackControls();
     timelineComponent.repaint();
 }

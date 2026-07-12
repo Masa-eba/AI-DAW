@@ -75,6 +75,7 @@ public:
     bool renameTrack(const TrackId& trackId, const juce::String& newName);
     void setTrackMuted(const TrackId& trackId, bool muted);
     void setTrackSolo(const TrackId& trackId, bool solo);
+    void soloOnlyTrack(const TrackId& trackId);
     void setTrackArmed(const TrackId& trackId, bool armed);
     void clearTrackMuteSolo();
     void clearTrackArms();
