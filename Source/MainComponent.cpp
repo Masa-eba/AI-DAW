@@ -634,6 +634,15 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
 
     if (key.getModifiers().isCommandDown()
         && key.getModifiers().isAltDown()
+        && key.getModifiers().isShiftDown()
+        && key.getKeyCode() == 'd')
+    {
+        duplicateSelectedClipAtNextBar();
+        return true;
+    }
+
+    if (key.getModifiers().isCommandDown()
+        && key.getModifiers().isAltDown()
         && key.getKeyCode() == 'd')
     {
         duplicateSelectedTrack();
@@ -2294,6 +2303,69 @@ void MainComponent::duplicateSelectedClipAtPlayhead()
     }
 
     showErrorMessage("No clip selected", "Select an audio or MIDI clip before duplicating.");
+}
+
+void MainComponent::duplicateSelectedClipAtNextBar()
+{
+    const auto& tempo = audioEngine.getProjectModel().getTempoMap();
+    const auto beatsPerBar = static_cast<double>(juce::jmax(1, tempo.getNumerator()));
+
+    if (const auto selectedClip = timelineComponent.getSelectedAudioClip())
+    {
+        if (const auto* track = audioEngine.getProjectModel().findAudioTrack(selectedClip->first))
+        {
+            for (const auto& clip : track->clips)
+            {
+                if (clip.id != selectedClip->second)
+                    continue;
+
+                const auto startBeat = tempo.secondsToBeats(clip.startTimeSeconds);
+                const auto nextBarBeat = (std::floor(startBeat / beatsPerBar) + 1.0) * beatsPerBar;
+
+                if (! audioEngine.duplicateAudioClipAtTime(selectedClip->first,
+                                                           selectedClip->second,
+                                                           tempo.beatsToSeconds(nextBarBeat)))
+                {
+                    showErrorMessage("Duplicate failed", "The selected audio clip could not be duplicated at the next bar.");
+                    return;
+                }
+
+                updateTimelineSize();
+                updateTransportDisplay();
+                timelineComponent.repaint();
+                return;
+            }
+        }
+    }
+
+    if (const auto selectedMidiClip = timelineComponent.getSelectedMidiClip())
+    {
+        if (const auto* track = audioEngine.getProjectModel().findMidiTrack(selectedMidiClip->first))
+        {
+            for (const auto& clip : track->clips)
+            {
+                if (clip.id != selectedMidiClip->second)
+                    continue;
+
+                const auto nextBarBeat = (std::floor(clip.startBeat / beatsPerBar) + 1.0) * beatsPerBar;
+
+                if (! audioEngine.duplicateMidiClipAtBeat(selectedMidiClip->first,
+                                                          selectedMidiClip->second,
+                                                          nextBarBeat))
+                {
+                    showErrorMessage("Duplicate failed", "The selected MIDI clip could not be duplicated at the next bar.");
+                    return;
+                }
+
+                updateTimelineSize();
+                updateTransportDisplay();
+                timelineComponent.repaint();
+                return;
+            }
+        }
+    }
+
+    showErrorMessage("No clip selected", "Select an audio or MIDI clip before duplicating it at the next bar.");
 }
 
 void MainComponent::toggleSelectedClipMute()

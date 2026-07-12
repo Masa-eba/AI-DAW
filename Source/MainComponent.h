@@ -85,6 +85,7 @@ private:
     void toggleSelectedAudioClipReverse();
     void duplicateSelectedClip();
     void duplicateSelectedClipAtPlayhead();
+    void duplicateSelectedClipAtNextBar();
     void toggleSelectedClipMute();
     void deleteSelectedClip();
     void splitSelectedClip();

@@ -226,6 +226,7 @@ open build/MiniDAW_artefacts/AI-DAW.app
 - `Option + Shift + B`: ループ範囲を解除
 - `Command + D`: 選択中AudioClip / MidiClipを複製
 - `Command + Shift + D`: 選択中AudioClip / MidiClipを再生位置へ複製
+- `Command + Option + Shift + D`: 選択中AudioClip / MidiClipを次の小節頭へ複製
 - `Command + Shift + M`: 選択中AudioClip / MidiClipのMute切替
 - `Command + E`: 選択中AudioClip / MidiClipを再生位置でSplit
 - `Command + Option + F`: 選択中AudioClipのFade In / Outをクリア
