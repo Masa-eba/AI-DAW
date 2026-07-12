@@ -983,6 +983,15 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
         return true;
     }
 
+    if (key.getModifiers().isCommandDown()
+        && key.getModifiers().isAltDown()
+        && key.getModifiers().isShiftDown()
+        && key.getKeyCode() == '0')
+    {
+        resetSelectedAudioClipSourceStart();
+        return true;
+    }
+
     if (key.getModifiers().isCommandDown() && key.getKeyCode() == '0')
     {
         resetSelectedAudioClipGain();
@@ -2181,6 +2190,47 @@ void MainComponent::alignSelectedClipToBar()
     }
 
     showErrorMessage("No clip selected", "Select an audio or MIDI clip before aligning it to a bar.");
+}
+
+void MainComponent::resetSelectedAudioClipSourceStart()
+{
+    const auto selectedAudioClip = timelineComponent.getSelectedAudioClip();
+
+    if (! selectedAudioClip.has_value())
+    {
+        showErrorMessage("No audio clip selected", "Select an audio clip before resetting its source start.");
+        return;
+    }
+
+    if (const auto* track = audioEngine.getProjectModel().findAudioTrack(selectedAudioClip->first))
+    {
+        const auto sourceDuration = track->getAudioDurationSeconds();
+
+        for (const auto& clip : track->clips)
+        {
+            if (clip.id != selectedAudioClip->second)
+                continue;
+
+            const auto newLength = juce::jmin(sourceDuration, clip.lengthSeconds + clip.sourceOffsetSeconds);
+
+            if (! audioEngine.setAudioClipTiming(selectedAudioClip->first,
+                                                 selectedAudioClip->second,
+                                                 clip.startTimeSeconds,
+                                                 0.0,
+                                                 newLength))
+            {
+                showErrorMessage("Reset failed", "The selected audio clip source start could not be reset.");
+                return;
+            }
+
+            updateTimelineSize();
+            updateTransportDisplay();
+            timelineComponent.repaint();
+            return;
+        }
+    }
+
+    showErrorMessage("Reset failed", "The selected audio clip could not be found.");
 }
 
 void MainComponent::importAudioToSelectedTrack()

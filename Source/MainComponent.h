@@ -81,6 +81,7 @@ private:
     void selectAdjacentClip(int direction);
     void selectClipAtPlayhead();
     void alignSelectedClipToBar();
+    void resetSelectedAudioClipSourceStart();
     void adjustSelectedAudioClipGain(float delta);
     void resetSelectedAudioClipGain();
     void normalizeSelectedAudioClip();
