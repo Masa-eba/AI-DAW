@@ -41,6 +41,7 @@ private:
     void updateTimelineSize();
     void undoProjectEdit();
     void redoProjectEdit();
+    void newProject();
     void renameSelectedTrack();
     void loopSelectedClip();
     void importAudioToSelectedTrack();
@@ -79,6 +80,7 @@ private:
     juce::Label midiInputLabel;
     juce::Label trackLabel;
     juce::Label zoomLabel;
+    juce::TextButton newProjectButton;
     juce::TextButton openProjectButton;
     juce::TextButton saveProjectButton;
     juce::TextButton exportButton;

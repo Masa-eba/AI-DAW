@@ -80,6 +80,23 @@ bool AudioEngine::removeTrack(const TrackId& trackId)
     return projectModel.removeTrack(trackId);
 }
 
+void AudioEngine::newProject()
+{
+    stop();
+
+    std::scoped_lock lock(modelMutex);
+    saveUndoSnapshotNoLock();
+    projectModel.clearProject();
+    projectModel.addAudioTrack();
+    projectModel.addMidiTrack();
+    currentFile = juce::File();
+    lastRecordingFile = juce::File();
+    activeRecordingSequence.clear();
+    recordingMidi.store(false);
+    loopEnabled.store(false);
+    clearLoopRange();
+}
+
 bool AudioEngine::loadFile(const juce::File& file)
 {
     std::scoped_lock lock(modelMutex);

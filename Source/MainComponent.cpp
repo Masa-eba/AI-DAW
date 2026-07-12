@@ -38,6 +38,10 @@ MainComponent::MainComponent()
     zoomLabel.setColour(juce::Label::textColourId, juce::Colours::white);
     addAndMakeVisible(zoomLabel);
 
+    newProjectButton.setButtonText("New");
+    newProjectButton.onClick = [this] { newProject(); };
+    addAndMakeVisible(newProjectButton);
+
     openProjectButton.setButtonText("Open Project");
     openProjectButton.onClick = [this] { openProject(); };
     addAndMakeVisible(openProjectButton);
@@ -403,6 +407,8 @@ void MainComponent::resized()
     titleLabel.setBounds(area.removeFromTop(42));
 
     auto projectBar = area.removeFromTop(36);
+    newProjectButton.setBounds(projectBar.removeFromLeft(72).reduced(0, 3));
+    projectBar.removeFromLeft(8);
     openProjectButton.setBounds(projectBar.removeFromLeft(120).reduced(0, 3));
     projectBar.removeFromLeft(8);
     saveProjectButton.setBounds(projectBar.removeFromLeft(78).reduced(0, 3));
@@ -755,6 +761,31 @@ void MainComponent::redoProjectEdit()
     updateTimelineSize();
     updateTransportDisplay();
     timelineComponent.repaint();
+}
+
+void MainComponent::newProject()
+{
+    auto options = juce::MessageBoxOptions()
+                       .withIconType(juce::MessageBoxIconType::WarningIcon)
+                       .withTitle("New project")
+                       .withMessage("Clear the current project and start a new one?")
+                       .withButton("New Project")
+                       .withButton("Cancel");
+    juce::Component::SafePointer<MainComponent> safeThis(this);
+
+    juce::AlertWindow::showAsync(options, [safeThis](int result)
+    {
+        if (safeThis == nullptr || result != 1)
+            return;
+
+        auto* component = safeThis.getComponent();
+        component->audioEngine.newProject();
+        component->loopButton.setToggleState(false, juce::dontSendNotification);
+        component->refreshTrackSelector();
+        component->updateTimelineSize();
+        component->updateTransportDisplay();
+        component->timelineComponent.repaint();
+    });
 }
 
 void MainComponent::renameSelectedTrack()
