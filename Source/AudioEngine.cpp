@@ -603,6 +603,40 @@ bool AudioEngine::quantizeMidiClip(const TrackId& trackId, const juce::Uuid& cli
     return false;
 }
 
+bool AudioEngine::transposeMidiClip(const TrackId& trackId, const juce::Uuid& clipId, int semitones)
+{
+    if (semitones == 0)
+        return true;
+
+    std::scoped_lock lock(modelMutex);
+
+    if (auto* track = projectModel.findMidiTrack(trackId))
+        for (auto& clip : track->clips)
+            if (clip.id == clipId)
+            {
+                for (auto i = 0; i < clip.sequence.getNumEvents(); ++i)
+                {
+                    auto* event = clip.sequence.getEventPointer(i);
+
+                    if (event == nullptr)
+                        continue;
+
+                    auto message = event->message;
+
+                    if (! message.isNoteOnOrOff())
+                        continue;
+
+                    message.setNoteNumber(juce::jlimit(0, 127, message.getNoteNumber() + semitones));
+                    event->message = message;
+                }
+
+                clip.sequence.updateMatchedPairs();
+                return true;
+            }
+
+    return false;
+}
+
 bool AudioEngine::generateChordProgression(const TrackId& trackId, const juce::String& style)
 {
     std::scoped_lock lock(modelMutex);

@@ -46,6 +46,7 @@ private:
     void fadeInSelectedClip();
     void fadeOutSelectedClip();
     void quantizeSelectedMidiClip();
+    void transposeSelectedMidiClip(int semitones);
     void generateAiChordsForSelectedTrack();
     void exportMix();
     void saveProject();

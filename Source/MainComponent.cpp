@@ -462,6 +462,18 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
         return true;
     }
 
+    if (key.getModifiers().isCommandDown() && key.getKeyCode() == juce::KeyPress::upKey)
+    {
+        transposeSelectedMidiClip(12);
+        return true;
+    }
+
+    if (key.getModifiers().isCommandDown() && key.getKeyCode() == juce::KeyPress::downKey)
+    {
+        transposeSelectedMidiClip(-12);
+        return true;
+    }
+
     if (key.getKeyCode() == juce::KeyPress::deleteKey
         || key.getKeyCode() == juce::KeyPress::backspaceKey)
     {
@@ -826,6 +838,25 @@ void MainComponent::quantizeSelectedMidiClip()
 
     timelineComponent.repaint();
     updateTransportDisplay();
+}
+
+void MainComponent::transposeSelectedMidiClip(int semitones)
+{
+    const auto selectedMidiClip = timelineComponent.getSelectedMidiClip();
+
+    if (! selectedMidiClip.has_value())
+    {
+        showErrorMessage("No MIDI clip selected", "Select a MIDI clip before transposing.");
+        return;
+    }
+
+    if (! audioEngine.transposeMidiClip(selectedMidiClip->first, selectedMidiClip->second, semitones))
+    {
+        showErrorMessage("Transpose failed", "The selected MIDI clip could not be transposed.");
+        return;
+    }
+
+    timelineComponent.repaint();
 }
 
 void MainComponent::generateAiChordsForSelectedTrack()
