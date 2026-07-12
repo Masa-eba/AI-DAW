@@ -261,6 +261,24 @@ MainComponent::MainComponent()
         timelineComponent.repaint();
         updateTransportDisplay();
     };
+    timelineComponent.onMidiClipMoved = [this](const TrackId& trackId,
+                                               const juce::Uuid& clipId,
+                                               double startBeat)
+    {
+        audioEngine.setMidiClipStartBeat(trackId, clipId, startBeat);
+        timelineComponent.repaint();
+        updateTransportDisplay();
+    };
+    timelineComponent.onMidiClipMovedToTrack = [this](const TrackId& sourceTrackId,
+                                                      const TrackId& destinationTrackId,
+                                                      const juce::Uuid& clipId,
+                                                      double startBeat)
+    {
+        audioEngine.moveMidiClipToTrack(sourceTrackId, destinationTrackId, clipId, startBeat);
+        refreshTrackSelector();
+        timelineComponent.repaint();
+        updateTransportDisplay();
+    };
     timelineComponent.onAudioFileDropped = [this](const TrackId& trackId,
                                                   const juce::File& file,
                                                   double startTimeSeconds)
@@ -579,40 +597,70 @@ void MainComponent::duplicateSelectedClip()
 {
     const auto selectedClip = timelineComponent.getSelectedAudioClip();
 
-    if (! selectedClip.has_value())
+    if (selectedClip.has_value())
     {
-        showErrorMessage("No clip selected", "Select an audio clip before duplicating.");
+        if (! audioEngine.duplicateAudioClip(selectedClip->first, selectedClip->second))
+        {
+            showErrorMessage("Duplicate failed", "The selected audio clip could not be duplicated.");
+            return;
+        }
+
+        timelineComponent.repaint();
+        updateTransportDisplay();
         return;
     }
 
-    if (! audioEngine.duplicateAudioClip(selectedClip->first, selectedClip->second))
+    const auto selectedMidiClip = timelineComponent.getSelectedMidiClip();
+
+    if (selectedMidiClip.has_value())
     {
-        showErrorMessage("Duplicate failed", "The selected audio clip could not be duplicated.");
+        if (! audioEngine.duplicateMidiClip(selectedMidiClip->first, selectedMidiClip->second))
+        {
+            showErrorMessage("Duplicate failed", "The selected MIDI clip could not be duplicated.");
+            return;
+        }
+
+        timelineComponent.repaint();
+        updateTransportDisplay();
         return;
     }
 
-    timelineComponent.repaint();
-    updateTransportDisplay();
+    showErrorMessage("No clip selected", "Select an audio or MIDI clip before duplicating.");
 }
 
 void MainComponent::deleteSelectedClip()
 {
     const auto selectedClip = timelineComponent.getSelectedAudioClip();
 
-    if (! selectedClip.has_value())
+    if (selectedClip.has_value())
     {
-        showErrorMessage("No clip selected", "Select an audio clip before deleting.");
+        if (! audioEngine.deleteAudioClip(selectedClip->first, selectedClip->second))
+        {
+            showErrorMessage("Delete failed", "The selected audio clip could not be deleted.");
+            return;
+        }
+
+        timelineComponent.repaint();
+        updateTransportDisplay();
         return;
     }
 
-    if (! audioEngine.deleteAudioClip(selectedClip->first, selectedClip->second))
+    const auto selectedMidiClip = timelineComponent.getSelectedMidiClip();
+
+    if (selectedMidiClip.has_value())
     {
-        showErrorMessage("Delete failed", "The selected audio clip could not be deleted.");
+        if (! audioEngine.deleteMidiClip(selectedMidiClip->first, selectedMidiClip->second))
+        {
+            showErrorMessage("Delete failed", "The selected MIDI clip could not be deleted.");
+            return;
+        }
+
+        timelineComponent.repaint();
+        updateTransportDisplay();
         return;
     }
 
-    timelineComponent.repaint();
-    updateTransportDisplay();
+    showErrorMessage("No clip selected", "Select an audio or MIDI clip before deleting.");
 }
 
 void MainComponent::splitSelectedClip()

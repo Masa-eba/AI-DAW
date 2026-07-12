@@ -41,6 +41,11 @@ std::optional<std::pair<TrackId, juce::Uuid>> TimelineComponent::getSelectedAudi
     return selectedAudioClip;
 }
 
+std::optional<std::pair<TrackId, juce::Uuid>> TimelineComponent::getSelectedMidiClip() const
+{
+    return selectedMidiClip;
+}
+
 void TimelineComponent::paint(juce::Graphics& graphics)
 {
     graphics.fillAll(juce::Colour(0xff252629));
@@ -174,12 +179,25 @@ void TimelineComponent::paint(juce::Graphics& graphics)
             {
                 const auto start = projectModel->getTempoMap().beatsToSeconds(clip.startBeat);
                 const auto length = projectModel->getTempoMap().beatsToSeconds(clip.lengthBeats);
-                graphics.setColour(juce::Colour(0xff7b5cc7));
+                const auto isSelected = selectedMidiClip.has_value()
+                                     && selectedMidiClip->first == track->state.id
+                                     && selectedMidiClip->second == clip.id;
+                graphics.setColour(isSelected ? juce::Colour(0xff9b78f0) : juce::Colour(0xff7b5cc7));
                 graphics.fillRoundedRectangle(static_cast<float>(labelWidth) + static_cast<float>(start * pixelsPerSecond),
                                               static_cast<float>(y + 14),
                                               static_cast<float>(juce::jmax(24, static_cast<int>(length * pixelsPerSecond))),
                                               36.0f,
                                               4.0f);
+                if (isSelected)
+                {
+                    graphics.setColour(juce::Colour(0xffffc857));
+                    graphics.drawRoundedRectangle(static_cast<float>(labelWidth) + static_cast<float>(start * pixelsPerSecond),
+                                                  static_cast<float>(y + 14),
+                                                  static_cast<float>(juce::jmax(24, static_cast<int>(length * pixelsPerSecond))),
+                                                  36.0f,
+                                                  4.0f,
+                                                  2.0f);
+                }
                 graphics.setColour(juce::Colours::white);
                 graphics.drawText("MIDI Clip", labelWidth + static_cast<int>(start * pixelsPerSecond) + 8,
                                   y + 20, 100, 22, juce::Justification::left);
@@ -205,6 +223,37 @@ void TimelineComponent::paint(juce::Graphics& graphics)
             graphics.drawVerticalLine(static_cast<int>(x), 0.0f, static_cast<float>(getHeight()));
             graphics.setColour(juce::Colours::white);
             graphics.drawText(dragPreviewName,
+                              static_cast<int>(x) + 8,
+                              static_cast<int>(*previewY) + 20,
+                              static_cast<int>(width) - 16,
+                              22,
+                              juce::Justification::centredLeft,
+                              true);
+        }
+    }
+
+    if (draggingMidiClip)
+    {
+        if (const auto previewY = getMidiTrackY(dragPreviewMidiTrackId))
+        {
+            const auto startSeconds = projectModel != nullptr
+                ? projectModel->getTempoMap().beatsToSeconds(dragPreviewStartBeats)
+                : 0.0;
+            const auto lengthSeconds = projectModel != nullptr
+                ? projectModel->getTempoMap().beatsToSeconds(dragPreviewLengthBeats)
+                : 0.0;
+            const auto x = secondsToX(startSeconds);
+            const auto width = juce::jmax(36.0f, static_cast<float>(lengthSeconds * pixelsPerSecond));
+
+            graphics.setColour(juce::Colour(0x667b5cc7));
+            graphics.fillRect(0, static_cast<int>(*previewY), getWidth(), trackHeight - 1);
+            graphics.setColour(juce::Colour(0xdd9b78f0));
+            graphics.fillRoundedRectangle(x, *previewY + 14.0f, width, 36.0f, 4.0f);
+            graphics.setColour(juce::Colour(0xffffc857));
+            graphics.drawRoundedRectangle(x, *previewY + 14.0f, width, 36.0f, 4.0f, 2.0f);
+            graphics.drawVerticalLine(static_cast<int>(x), 0.0f, static_cast<float>(getHeight()));
+            graphics.setColour(juce::Colours::white);
+            graphics.drawText(dragPreviewMidiName,
                               static_cast<int>(x) + 8,
                               static_cast<int>(*previewY) + 20,
                               static_cast<int>(width) - 16,
@@ -257,6 +306,26 @@ void TimelineComponent::mouseDown(const juce::MouseEvent& event)
         dragPreviewLengthSeconds = hit->lengthSeconds;
         dragPreviewName = hit->name;
         selectedAudioClip = std::make_pair(hit->trackId, hit->clipId);
+        selectedMidiClip.reset();
+        setMouseCursor(juce::MouseCursor::DraggingHandCursor);
+        repaint();
+        return;
+    }
+
+    if (auto hit = findMidiClipAt(event.position))
+    {
+        draggingMidiClip = true;
+        draggingMidiTrackId = hit->trackId;
+        draggingMidiClipId = hit->clipId;
+        dragPreviewMidiTrackId = hit->trackId;
+        dragGrabOffsetBeats = projectModel != nullptr
+            ? projectModel->getTempoMap().secondsToBeats(xToSeconds(event.position.x)) - hit->startBeat
+            : 0.0;
+        dragPreviewStartBeats = hit->startBeat;
+        dragPreviewLengthBeats = hit->lengthBeats;
+        dragPreviewMidiName = hit->name;
+        selectedMidiClip = std::make_pair(hit->trackId, hit->clipId);
+        selectedAudioClip.reset();
         setMouseCursor(juce::MouseCursor::DraggingHandCursor);
         repaint();
         return;
@@ -271,17 +340,35 @@ void TimelineComponent::mouseDown(const juce::MouseEvent& event)
 
 void TimelineComponent::mouseDrag(const juce::MouseEvent& event)
 {
-    if (! draggingAudioClip)
+    if (draggingAudioClip)
+    {
+        dragPreviewTrackId = findAudioTrackAtY(event.position.y).value_or(dragPreviewTrackId);
+        auto newStart = xToSeconds(event.position.x) - dragGrabOffsetSeconds;
+
+        if (! std::isfinite(newStart) || newStart < 0.0)
+            newStart = 0.0;
+
+        dragPreviewStartSeconds = snapSeconds(newStart);
+        repaint();
         return;
+    }
 
-    dragPreviewTrackId = findAudioTrackAtY(event.position.y).value_or(dragPreviewTrackId);
-    auto newStart = xToSeconds(event.position.x) - dragGrabOffsetSeconds;
+    if (draggingMidiClip && projectModel != nullptr)
+    {
+        dragPreviewMidiTrackId = findMidiTrackAtY(event.position.y).value_or(dragPreviewMidiTrackId);
+        auto newStartSeconds = xToSeconds(event.position.x);
+        auto newStartBeats = projectModel->getTempoMap().secondsToBeats(newStartSeconds) - dragGrabOffsetBeats;
 
-    if (! std::isfinite(newStart) || newStart < 0.0)
-        newStart = 0.0;
+        if (! std::isfinite(newStartBeats) || newStartBeats < 0.0)
+            newStartBeats = 0.0;
 
-    dragPreviewStartSeconds = snapSeconds(newStart);
-    repaint();
+        const auto beatSeconds = 60.0 / projectModel->getBpm();
+        const auto snappedSeconds = snapSeconds(projectModel->getTempoMap().beatsToSeconds(newStartBeats));
+        dragPreviewStartBeats = beatSeconds > 0.0
+            ? projectModel->getTempoMap().secondsToBeats(snappedSeconds)
+            : newStartBeats;
+        repaint();
+    }
 }
 
 void TimelineComponent::mouseUp(const juce::MouseEvent& event)
@@ -303,11 +390,34 @@ void TimelineComponent::mouseUp(const juce::MouseEvent& event)
         selectedAudioClip = std::make_pair(dragPreviewTrackId, draggingClipId);
     }
 
+    if (draggingMidiClip)
+    {
+        if (dragPreviewMidiTrackId == draggingMidiTrackId)
+        {
+            if (onMidiClipMoved)
+                onMidiClipMoved(draggingMidiTrackId, draggingMidiClipId, dragPreviewStartBeats);
+        }
+        else if (onMidiClipMovedToTrack)
+        {
+            onMidiClipMovedToTrack(draggingMidiTrackId,
+                                   dragPreviewMidiTrackId,
+                                   draggingMidiClipId,
+                                   dragPreviewStartBeats);
+        }
+
+        selectedMidiClip = std::make_pair(dragPreviewMidiTrackId, draggingMidiClipId);
+    }
+
     draggingAudioClip = false;
+    draggingMidiClip = false;
     dragGrabOffsetSeconds = 0.0;
     dragPreviewStartSeconds = 0.0;
     dragPreviewLengthSeconds = 0.0;
     dragPreviewName.clear();
+    dragGrabOffsetBeats = 0.0;
+    dragPreviewStartBeats = 0.0;
+    dragPreviewLengthBeats = 0.0;
+    dragPreviewMidiName.clear();
     setMouseCursor(juce::MouseCursor::NormalCursor);
     repaint();
 }
@@ -406,6 +516,43 @@ std::optional<TimelineComponent::HitAudioClip> TimelineComponent::findAudioClipA
     return std::nullopt;
 }
 
+std::optional<TimelineComponent::HitMidiClip> TimelineComponent::findMidiClipAt(juce::Point<float> position) const
+{
+    if (projectModel == nullptr)
+        return std::nullopt;
+
+    auto y = headerHeight + static_cast<int>(projectModel->getAudioTracks().size()) * trackHeight;
+
+    for (const auto& track : projectModel->getMidiTracks())
+    {
+        for (const auto& clip : track->clips)
+        {
+            const auto startSeconds = projectModel->getTempoMap().beatsToSeconds(clip.startBeat);
+            const auto lengthSeconds = projectModel->getTempoMap().beatsToSeconds(clip.lengthBeats);
+            const auto clipBounds = juce::Rectangle<float>(
+                secondsToX(startSeconds),
+                static_cast<float>(y + 14),
+                static_cast<float>(juce::jmax(24, static_cast<int>(lengthSeconds * pixelsPerSecond))),
+                36.0f);
+            const auto hitBounds = clipBounds.expanded(4.0f, 8.0f);
+
+            if (hitBounds.contains(position))
+                return HitMidiClip {
+                    track->state.id,
+                    clip.id,
+                    hitBounds,
+                    clip.startBeat,
+                    clip.lengthBeats,
+                    "MIDI Clip"
+                };
+        }
+
+        y += trackHeight;
+    }
+
+    return std::nullopt;
+}
+
 std::optional<float> TimelineComponent::getAudioTrackY(const TrackId& trackId) const
 {
     if (projectModel == nullptr)
@@ -424,6 +571,25 @@ std::optional<float> TimelineComponent::getAudioTrackY(const TrackId& trackId) c
     return std::nullopt;
 }
 
+std::optional<float> TimelineComponent::getMidiTrackY(const TrackId& trackId) const
+{
+    if (projectModel == nullptr)
+        return std::nullopt;
+
+    auto y = static_cast<float>(headerHeight)
+           + static_cast<float>(projectModel->getAudioTracks().size() * trackHeight);
+
+    for (const auto& track : projectModel->getMidiTracks())
+    {
+        if (track->state.id == trackId)
+            return y;
+
+        y += static_cast<float>(trackHeight);
+    }
+
+    return std::nullopt;
+}
+
 std::optional<TrackId> TimelineComponent::findAudioTrackAtY(float yPosition) const
 {
     if (projectModel == nullptr)
@@ -432,6 +598,25 @@ std::optional<TrackId> TimelineComponent::findAudioTrackAtY(float yPosition) con
     auto y = static_cast<float>(headerHeight);
 
     for (const auto& track : projectModel->getAudioTracks())
+    {
+        if (yPosition >= y && yPosition < y + static_cast<float>(trackHeight))
+            return track->state.id;
+
+        y += static_cast<float>(trackHeight);
+    }
+
+    return std::nullopt;
+}
+
+std::optional<TrackId> TimelineComponent::findMidiTrackAtY(float yPosition) const
+{
+    if (projectModel == nullptr)
+        return std::nullopt;
+
+    auto y = static_cast<float>(headerHeight)
+           + static_cast<float>(projectModel->getAudioTracks().size() * trackHeight);
+
+    for (const auto& track : projectModel->getMidiTracks())
     {
         if (yPosition >= y && yPosition < y + static_cast<float>(trackHeight))
             return track->state.id;

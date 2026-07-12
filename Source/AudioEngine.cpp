@@ -469,6 +469,101 @@ bool AudioEngine::setAudioClipFade(const TrackId& trackId,
     return false;
 }
 
+void AudioEngine::setMidiClipStartBeat(const TrackId& trackId,
+                                       const juce::Uuid& clipId,
+                                       double startBeat)
+{
+    if (! std::isfinite(startBeat) || startBeat < 0.0)
+        startBeat = 0.0;
+
+    std::scoped_lock lock(modelMutex);
+
+    if (auto* track = projectModel.findMidiTrack(trackId))
+        for (auto& clip : track->clips)
+            if (clip.id == clipId)
+            {
+                clip.startBeat = startBeat;
+                return;
+            }
+}
+
+void AudioEngine::moveMidiClipToTrack(const TrackId& sourceTrackId,
+                                      const TrackId& destinationTrackId,
+                                      const juce::Uuid& clipId,
+                                      double startBeat)
+{
+    if (! std::isfinite(startBeat) || startBeat < 0.0)
+        startBeat = 0.0;
+
+    std::scoped_lock lock(modelMutex);
+
+    auto* sourceTrack = projectModel.findMidiTrack(sourceTrackId);
+    auto* destinationTrack = projectModel.findMidiTrack(destinationTrackId);
+
+    if (sourceTrack == nullptr || destinationTrack == nullptr)
+        return;
+
+    auto clipIterator = std::find_if(sourceTrack->clips.begin(),
+                                     sourceTrack->clips.end(),
+                                     [&clipId](const MidiClip& clip)
+                                     {
+                                         return clip.id == clipId;
+                                     });
+
+    if (clipIterator == sourceTrack->clips.end())
+        return;
+
+    if (sourceTrack == destinationTrack)
+    {
+        clipIterator->startBeat = startBeat;
+        return;
+    }
+
+    auto movedClip = *clipIterator;
+    movedClip.startBeat = startBeat;
+    destinationTrack->clips.push_back(movedClip);
+    sourceTrack->clips.erase(clipIterator);
+}
+
+bool AudioEngine::duplicateMidiClip(const TrackId& trackId, const juce::Uuid& clipId)
+{
+    std::scoped_lock lock(modelMutex);
+
+    if (auto* track = projectModel.findMidiTrack(trackId))
+        for (const auto& clip : track->clips)
+            if (clip.id == clipId)
+            {
+                auto duplicate = clip;
+                duplicate.id = juce::Uuid();
+                duplicate.startBeat += juce::jmax(1.0, clip.lengthBeats);
+                track->clips.push_back(duplicate);
+                return true;
+            }
+
+    return false;
+}
+
+bool AudioEngine::deleteMidiClip(const TrackId& trackId, const juce::Uuid& clipId)
+{
+    std::scoped_lock lock(modelMutex);
+
+    if (auto* track = projectModel.findMidiTrack(trackId))
+    {
+        const auto oldSize = track->clips.size();
+        track->clips.erase(std::remove_if(track->clips.begin(),
+                                          track->clips.end(),
+                                          [&clipId](const MidiClip& clip)
+                                          {
+                                              return clip.id == clipId;
+                                          }),
+                           track->clips.end());
+
+        return track->clips.size() != oldSize;
+    }
+
+    return false;
+}
+
 bool AudioEngine::generateChordProgression(const TrackId& trackId, const juce::String& style)
 {
     std::scoped_lock lock(modelMutex);

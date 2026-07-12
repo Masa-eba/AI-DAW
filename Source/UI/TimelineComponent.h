@@ -18,6 +18,7 @@ public:
     void setSnapEnabled(bool enabled);
     bool isSnapEnabled() const;
     std::optional<std::pair<TrackId, juce::Uuid>> getSelectedAudioClip() const;
+    std::optional<std::pair<TrackId, juce::Uuid>> getSelectedMidiClip() const;
     void paint(juce::Graphics& graphics) override;
     void mouseDown(const juce::MouseEvent& event) override;
     void mouseDrag(const juce::MouseEvent& event) override;
@@ -31,6 +32,8 @@ public:
     std::function<void(double)> onSeek;
     std::function<void(const TrackId&, const juce::Uuid&, double)> onAudioClipMoved;
     std::function<void(const TrackId&, const TrackId&, const juce::Uuid&, double)> onAudioClipMovedToTrack;
+    std::function<void(const TrackId&, const juce::Uuid&, double)> onMidiClipMoved;
+    std::function<void(const TrackId&, const TrackId&, const juce::Uuid&, double)> onMidiClipMovedToTrack;
     std::function<void(const TrackId&, const juce::File&, double)> onAudioFileDropped;
 
 private:
@@ -44,9 +47,22 @@ private:
         juce::String name;
     };
 
+    struct HitMidiClip
+    {
+        TrackId trackId;
+        juce::Uuid clipId;
+        juce::Rectangle<float> bounds;
+        double startBeat = 0.0;
+        double lengthBeats = 0.0;
+        juce::String name;
+    };
+
     std::optional<HitAudioClip> findAudioClipAt(juce::Point<float> position) const;
+    std::optional<HitMidiClip> findMidiClipAt(juce::Point<float> position) const;
     std::optional<TrackId> findAudioTrackAtY(float yPosition) const;
+    std::optional<TrackId> findMidiTrackAtY(float yPosition) const;
     std::optional<float> getAudioTrackY(const TrackId& trackId) const;
+    std::optional<float> getMidiTrackY(const TrackId& trackId) const;
     static bool isSupportedAudioFile(const juce::File& file);
     float secondsToX(double seconds) const;
     double xToSeconds(float x) const;
@@ -64,7 +80,16 @@ private:
     double dragPreviewStartSeconds = 0.0;
     double dragPreviewLengthSeconds = 0.0;
     juce::String dragPreviewName;
+    bool draggingMidiClip = false;
+    TrackId draggingMidiTrackId;
+    juce::Uuid draggingMidiClipId;
+    TrackId dragPreviewMidiTrackId;
+    double dragGrabOffsetBeats = 0.0;
+    double dragPreviewStartBeats = 0.0;
+    double dragPreviewLengthBeats = 0.0;
+    juce::String dragPreviewMidiName;
     bool fileDragOver = false;
     juce::Point<float> fileDragPosition;
     std::optional<std::pair<TrackId, juce::Uuid>> selectedAudioClip;
+    std::optional<std::pair<TrackId, juce::Uuid>> selectedMidiClip;
 };
