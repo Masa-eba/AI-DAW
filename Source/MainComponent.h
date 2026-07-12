@@ -70,6 +70,7 @@ private:
     void transposeSelectedMidiClip(int semitones);
     void adjustSelectedMidiClipVelocity(float delta);
     void humanizeSelectedMidiClipVelocity();
+    void humanizeSelectedMidiClipTiming();
     void legatoSelectedMidiClip();
     void generateAiChordsForSelectedTrack();
     void exportMix();

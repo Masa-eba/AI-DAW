@@ -1089,6 +1089,76 @@ bool AudioEngine::humanizeMidiClipVelocity(const TrackId& trackId,
     return false;
 }
 
+bool AudioEngine::humanizeMidiClipTiming(const TrackId& trackId,
+                                         const juce::Uuid& clipId,
+                                         double amountBeats)
+{
+    if (! std::isfinite(amountBeats) || amountBeats <= 0.0)
+        return false;
+
+    std::scoped_lock lock(modelMutex);
+    saveUndoSnapshotNoLock();
+
+    if (auto* track = projectModel.findMidiTrack(trackId))
+        for (auto& clip : track->clips)
+            if (clip.id == clipId)
+            {
+                auto changed = false;
+                auto& random = juce::Random::getSystemRandom();
+                const auto safeAmount = juce::jlimit(0.0, 0.25, amountBeats);
+
+                for (auto i = 0; i < clip.sequence.getNumEvents(); ++i)
+                {
+                    auto* noteOnEvent = clip.sequence.getEventPointer(i);
+
+                    if (noteOnEvent == nullptr || ! noteOnEvent->message.isNoteOn())
+                        continue;
+
+                    auto* noteOffEvent = static_cast<juce::MidiMessageSequence::MidiEventHolder*>(nullptr);
+
+                    for (auto next = i + 1; next < clip.sequence.getNumEvents(); ++next)
+                    {
+                        auto* candidate = clip.sequence.getEventPointer(next);
+
+                        if (candidate == nullptr || ! candidate->message.isNoteOff())
+                            continue;
+
+                        if (candidate->message.getNoteNumber() == noteOnEvent->message.getNoteNumber()
+                            && candidate->message.getChannel() == noteOnEvent->message.getChannel())
+                        {
+                            noteOffEvent = candidate;
+                            break;
+                        }
+                    }
+
+                    if (noteOffEvent == nullptr)
+                        continue;
+
+                    const auto startBeat = noteOnEvent->message.getTimeStamp();
+                    const auto endBeat = noteOffEvent->message.getTimeStamp();
+                    const auto duration = juce::jmax(0.05, endBeat - startBeat);
+                    const auto offset = (random.nextDouble() * 2.0 - 1.0) * safeAmount;
+                    const auto newStart = juce::jlimit(0.0,
+                                                       juce::jmax(0.0, clip.lengthBeats - duration),
+                                                       startBeat + offset);
+                    const auto newEnd = juce::jlimit(newStart + 0.05,
+                                                     clip.lengthBeats,
+                                                     newStart + duration);
+
+                    noteOnEvent->message.setTimeStamp(newStart);
+                    noteOffEvent->message.setTimeStamp(newEnd);
+                    changed = true;
+                }
+
+                if (changed)
+                    clip.sequence.updateMatchedPairs();
+
+                return changed;
+            }
+
+    return false;
+}
+
 bool AudioEngine::legatoMidiClip(const TrackId& trackId, const juce::Uuid& clipId)
 {
     std::scoped_lock lock(modelMutex);
