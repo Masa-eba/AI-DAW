@@ -1,5 +1,8 @@
 #include "ProjectModel.h"
 
+#include <cmath>
+#include <limits>
+
 TrackId ProjectModel::addAudioTrack()
 {
     auto track = std::make_unique<AudioTrack>("Audio " + juce::String(audioTracks.size() + 1));
@@ -203,6 +206,34 @@ juce::Uuid ProjectModel::addMarker(double timeSeconds)
               });
 
     return id;
+}
+
+bool ProjectModel::removeNearestMarker(double timeSeconds, double thresholdSeconds)
+{
+    if (markers.empty())
+        return false;
+
+    const auto safeTime = juce::jmax(0.0, timeSeconds);
+    const auto safeThreshold = juce::jmax(0.0, thresholdSeconds);
+    auto best = markers.end();
+    auto bestDistance = std::numeric_limits<double>::max();
+
+    for (auto iterator = markers.begin(); iterator != markers.end(); ++iterator)
+    {
+        const auto distance = std::abs(iterator->timeSeconds - safeTime);
+
+        if (distance < bestDistance)
+        {
+            bestDistance = distance;
+            best = iterator;
+        }
+    }
+
+    if (best == markers.end() || bestDistance > safeThreshold)
+        return false;
+
+    markers.erase(best);
+    return true;
 }
 
 const std::vector<ProjectMarker>& ProjectModel::getMarkers() const

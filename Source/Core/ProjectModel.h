@@ -40,6 +40,7 @@ public:
     TempoMap& getTempoMap();
     const TempoMap& getTempoMap() const;
     juce::Uuid addMarker(double timeSeconds);
+    bool removeNearestMarker(double timeSeconds, double thresholdSeconds);
     const std::vector<ProjectMarker>& getMarkers() const;
 
     double getProjectLengthSeconds() const;

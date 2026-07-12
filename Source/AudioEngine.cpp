@@ -273,6 +273,13 @@ juce::Uuid AudioEngine::addMarker(double timeSeconds)
     return projectModel.addMarker(timeSeconds);
 }
 
+bool AudioEngine::removeNearestMarker(double timeSeconds, double thresholdSeconds)
+{
+    std::scoped_lock lock(modelMutex);
+    saveUndoSnapshotNoLock();
+    return projectModel.removeNearestMarker(timeSeconds, thresholdSeconds);
+}
+
 void AudioEngine::setGain(float gain)
 {
     masterGain.store(juce::jlimit(0.0f, 1.0f, gain));

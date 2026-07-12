@@ -658,6 +658,14 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
     }
 
     if (key.getModifiers().isAltDown()
+        && (key.getKeyCode() == juce::KeyPress::deleteKey
+            || key.getKeyCode() == juce::KeyPress::backspaceKey))
+    {
+        removeMarkerNearPlayhead();
+        return true;
+    }
+
+    if (key.getModifiers().isAltDown()
         && key.getModifiers().isShiftDown()
         && key.getKeyCode() == juce::KeyPress::upKey)
     {
@@ -946,6 +954,18 @@ void MainComponent::updateSnapButtonText()
 void MainComponent::addMarkerAtPlayhead()
 {
     audioEngine.addMarker(audioEngine.getPosition());
+    updateTimelineSize();
+    timelineComponent.repaint();
+}
+
+void MainComponent::removeMarkerNearPlayhead()
+{
+    const auto thresholdSeconds = audioEngine.getProjectModel().getTempoMap()
+                                      .beatsToSeconds(timelineComponent.getSnapGridBeats()) * 0.5;
+
+    if (! audioEngine.removeNearestMarker(audioEngine.getPosition(), thresholdSeconds))
+        return;
+
     updateTimelineSize();
     timelineComponent.repaint();
 }

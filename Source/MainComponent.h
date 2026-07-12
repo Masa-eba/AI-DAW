@@ -48,6 +48,7 @@ private:
     void cycleSnapGrid(int direction);
     void updateSnapButtonText();
     void addMarkerAtPlayhead();
+    void removeMarkerNearPlayhead();
     void jumpToMarker(int direction);
     void loopSelectedClip();
     void movePlayheadByGrid(int direction, bool byBar);

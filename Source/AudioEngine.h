@@ -50,6 +50,7 @@ public:
     void setBpm(double bpm);
     double getBpm() const;
     juce::Uuid addMarker(double timeSeconds);
+    bool removeNearestMarker(double timeSeconds, double thresholdSeconds);
     void setGain(float gain);
     float getGain() const;
     void setMetronomeEnabled(bool enabled);
