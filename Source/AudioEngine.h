@@ -93,6 +93,7 @@ public:
                           double fadeInSeconds,
                           double fadeOutSeconds);
     bool adjustAudioClipGain(const TrackId& trackId, const juce::Uuid& clipId, float delta);
+    bool toggleAudioClipMuted(const TrackId& trackId, const juce::Uuid& clipId);
     void setMidiClipStartBeat(const TrackId& trackId, const juce::Uuid& clipId, double startBeat);
     bool setMidiClipLength(const TrackId& trackId, const juce::Uuid& clipId, double lengthBeats);
     void moveMidiClipToTrack(const TrackId& sourceTrackId,
@@ -107,6 +108,7 @@ public:
     bool quantizeMidiClip(const TrackId& trackId, const juce::Uuid& clipId, double gridBeats);
     bool transposeMidiClip(const TrackId& trackId, const juce::Uuid& clipId, int semitones);
     bool adjustMidiClipVelocity(const TrackId& trackId, const juce::Uuid& clipId, float delta);
+    bool toggleMidiClipMuted(const TrackId& trackId, const juce::Uuid& clipId);
     bool generateChordProgression(const TrackId& trackId, const juce::String& style);
 
     void setMidiKeyboardState(juce::MidiKeyboardState* state);

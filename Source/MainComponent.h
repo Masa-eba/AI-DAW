@@ -58,6 +58,7 @@ private:
     void adjustSelectedAudioClipGain(float delta);
     void duplicateSelectedClip();
     void duplicateSelectedClipAtPlayhead();
+    void toggleSelectedClipMute();
     void deleteSelectedClip();
     void splitSelectedClip();
     void fadeInSelectedClip();

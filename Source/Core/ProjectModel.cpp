@@ -306,6 +306,7 @@ juce::String ProjectModel::toJsonString(const juce::File& projectDirectory) cons
             clipObject->setProperty("fadeInSeconds", clip.fadeInSeconds);
             clipObject->setProperty("fadeOutSeconds", clip.fadeOutSeconds);
             clipObject->setProperty("gain", clip.gain);
+            clipObject->setProperty("muted", clip.muted);
             clips.add(juce::var(clipObject.release()));
         }
         object->setProperty("clips", clips);
@@ -333,6 +334,7 @@ juce::String ProjectModel::toJsonString(const juce::File& projectDirectory) cons
             clipObject->setProperty("id", clip.id.toString());
             clipObject->setProperty("startBeat", clip.startBeat);
             clipObject->setProperty("lengthBeats", clip.lengthBeats);
+            clipObject->setProperty("muted", clip.muted);
 
             juce::Array<juce::var> events;
             for (auto i = 0; i < clip.sequence.getNumEvents(); ++i)
@@ -427,6 +429,7 @@ bool ProjectModel::loadFromJsonString(const juce::String& json, const juce::File
                         clip.fadeInSeconds = static_cast<double>(clipItem.getProperty("fadeInSeconds", 0.0));
                         clip.fadeOutSeconds = static_cast<double>(clipItem.getProperty("fadeOutSeconds", 0.0));
                         clip.gain = static_cast<float>(static_cast<double>(clipItem.getProperty("gain", 1.0)));
+                        clip.muted = static_cast<bool>(clipItem.getProperty("muted", false));
                         track->clips.push_back(clip);
                     }
                 }
@@ -459,6 +462,7 @@ bool ProjectModel::loadFromJsonString(const juce::String& json, const juce::File
                         clip.id = juce::Uuid(clipItem.getProperty("id", juce::Uuid().toString()).toString());
                         clip.startBeat = static_cast<double>(clipItem.getProperty("startBeat", 0.0));
                         clip.lengthBeats = static_cast<double>(clipItem.getProperty("lengthBeats", 0.0));
+                        clip.muted = static_cast<bool>(clipItem.getProperty("muted", false));
 
                         if (auto* events = clipItem.getProperty("events", {}).getArray())
                         {

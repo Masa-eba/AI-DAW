@@ -169,7 +169,9 @@ void TimelineComponent::paint(juce::Graphics& graphics)
                                          && selectedAudioClip->second == clip.id;
                     const auto x = secondsToX(clip.startTimeSeconds);
                     const auto width = static_cast<int>(clip.lengthSeconds * pixelsPerSecond);
-                    graphics.setColour(isSelected ? juce::Colour(0xff329f68) : juce::Colour(0xff2676a8));
+                    graphics.setColour(clip.muted
+                                            ? juce::Colour(0xff51565c)
+                                            : (isSelected ? juce::Colour(0xff329f68) : juce::Colour(0xff2676a8)));
                     graphics.fillRoundedRectangle(x,
                                                   static_cast<float>(y + 14),
                                                   static_cast<float>(juce::jmax(20, width)),
@@ -221,6 +223,9 @@ void TimelineComponent::paint(juce::Graphics& graphics)
                     if (std::abs(clip.gain - 1.0f) > 0.01f)
                         clipLabel += "  x" + juce::String(clip.gain, 1);
 
+                    if (clip.muted)
+                        clipLabel += "  Muted";
+
                     graphics.setColour(juce::Colours::white);
                     graphics.drawText(clipLabel,
                                       static_cast<int>(x) + 8,
@@ -249,7 +254,9 @@ void TimelineComponent::paint(juce::Graphics& graphics)
                 const auto isSelected = selectedMidiClip.has_value()
                                      && selectedMidiClip->first == track->state.id
                                      && selectedMidiClip->second == clip.id;
-                graphics.setColour(isSelected ? juce::Colour(0xff9b78f0) : juce::Colour(0xff7b5cc7));
+                graphics.setColour(clip.muted
+                                        ? juce::Colour(0xff51565c)
+                                        : (isSelected ? juce::Colour(0xff9b78f0) : juce::Colour(0xff7b5cc7)));
                 graphics.fillRoundedRectangle(static_cast<float>(labelWidth) + static_cast<float>(start * pixelsPerSecond),
                                               static_cast<float>(y + 14),
                                               static_cast<float>(juce::jmax(24, static_cast<int>(length * pixelsPerSecond))),
@@ -266,7 +273,8 @@ void TimelineComponent::paint(juce::Graphics& graphics)
                                                   2.0f);
                 }
                 graphics.setColour(juce::Colours::white);
-                graphics.drawText("MIDI Clip", labelWidth + static_cast<int>(start * pixelsPerSecond) + 8,
+                graphics.drawText(clip.muted ? "MIDI Clip  Muted" : "MIDI Clip",
+                                  labelWidth + static_cast<int>(start * pixelsPerSecond) + 8,
                                   y + 20, 100, 22, juce::Justification::left);
             }
 

@@ -716,6 +716,22 @@ bool AudioEngine::adjustAudioClipGain(const TrackId& trackId, const juce::Uuid& 
     return false;
 }
 
+bool AudioEngine::toggleAudioClipMuted(const TrackId& trackId, const juce::Uuid& clipId)
+{
+    std::scoped_lock lock(modelMutex);
+    saveUndoSnapshotNoLock();
+
+    if (auto* track = projectModel.findAudioTrack(trackId))
+        for (auto& clip : track->clips)
+            if (clip.id == clipId)
+            {
+                clip.muted = ! clip.muted;
+                return true;
+            }
+
+    return false;
+}
+
 void AudioEngine::setMidiClipStartBeat(const TrackId& trackId,
                                        const juce::Uuid& clipId,
                                        double startBeat)
@@ -965,6 +981,22 @@ bool AudioEngine::adjustMidiClipVelocity(const TrackId& trackId, const juce::Uui
                 }
 
                 clip.sequence.updateMatchedPairs();
+                return true;
+            }
+
+    return false;
+}
+
+bool AudioEngine::toggleMidiClipMuted(const TrackId& trackId, const juce::Uuid& clipId)
+{
+    std::scoped_lock lock(modelMutex);
+    saveUndoSnapshotNoLock();
+
+    if (auto* track = projectModel.findMidiTrack(trackId))
+        for (auto& clip : track->clips)
+            if (clip.id == clipId)
+            {
+                clip.muted = ! clip.muted;
                 return true;
             }
 
@@ -1321,6 +1353,9 @@ void AudioEngine::renderAudioTracks(juce::AudioBuffer<float>& buffer,
 
         for (const auto& clip : track.clips)
         {
+            if (clip.muted)
+                continue;
+
             for (auto sample = 0; sample < numSamples; ++sample)
             {
                 const auto timeSeconds = blockStartSeconds + static_cast<double>(sample) / outputSampleRate;
@@ -1382,6 +1417,9 @@ void AudioEngine::renderMidiTracks(juce::AudioBuffer<float>& buffer,
 
         for (const auto& clip : track.clips)
         {
+            if (clip.muted)
+                continue;
+
             for (auto i = 0; i < clip.sequence.getNumEvents(); ++i)
             {
                 const auto* event = clip.sequence.getEventPointer(i);

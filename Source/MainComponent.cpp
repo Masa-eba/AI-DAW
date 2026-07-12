@@ -582,6 +582,14 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
         return true;
     }
 
+    if (key.getModifiers().isCommandDown()
+        && key.getModifiers().isShiftDown()
+        && key.getKeyCode() == 'm')
+    {
+        toggleSelectedClipMute();
+        return true;
+    }
+
     if (key.getModifiers().isCommandDown() && key.getKeyCode() == juce::KeyPress::upKey)
     {
         transposeSelectedMidiClip(12);
@@ -1345,6 +1353,29 @@ void MainComponent::duplicateSelectedClipAtPlayhead()
     }
 
     showErrorMessage("No clip selected", "Select an audio or MIDI clip before duplicating.");
+}
+
+void MainComponent::toggleSelectedClipMute()
+{
+    if (const auto selectedClip = timelineComponent.getSelectedAudioClip())
+    {
+        if (! audioEngine.toggleAudioClipMuted(selectedClip->first, selectedClip->second))
+            showErrorMessage("Mute failed", "The selected audio clip mute state could not be changed.");
+
+        timelineComponent.repaint();
+        return;
+    }
+
+    if (const auto selectedMidiClip = timelineComponent.getSelectedMidiClip())
+    {
+        if (! audioEngine.toggleMidiClipMuted(selectedMidiClip->first, selectedMidiClip->second))
+            showErrorMessage("Mute failed", "The selected MIDI clip mute state could not be changed.");
+
+        timelineComponent.repaint();
+        return;
+    }
+
+    showErrorMessage("No clip selected", "Select an audio or MIDI clip before muting.");
 }
 
 void MainComponent::deleteSelectedClip()
