@@ -626,6 +626,12 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
         return true;
     }
 
+    if (key.getKeyCode() == juce::KeyPress::tabKey)
+    {
+        selectAdjacentClip(key.getModifiers().isShiftDown() ? -1 : 1);
+        return true;
+    }
+
     if (key.getModifiers().isCommandDown()
         && key.getModifiers().isAltDown()
         && key.getKeyCode() == 'd')
@@ -1875,6 +1881,20 @@ void MainComponent::moveSelectedClipToPlayhead()
     }
 
     showErrorMessage("No clip selected", "Select an audio or MIDI clip before moving it.");
+}
+
+void MainComponent::selectAdjacentClip(int direction)
+{
+    if (! timelineComponent.selectAdjacentClip(direction))
+        return;
+
+    if (const auto selectedAudioClip = timelineComponent.getSelectedAudioClip())
+        selectTrackById(selectedAudioClip->first);
+
+    if (const auto selectedMidiClip = timelineComponent.getSelectedMidiClip())
+        selectTrackById(selectedMidiClip->first);
+
+    timelineComponent.repaint();
 }
 
 void MainComponent::importAudioToSelectedTrack()

@@ -1,5 +1,6 @@
 #include "TimelineComponent.h"
 
+#include <algorithm>
 #include <cmath>
 #include <vector>
 
@@ -82,6 +83,106 @@ std::optional<std::pair<TrackId, juce::Uuid>> TimelineComponent::getSelectedAudi
 std::optional<std::pair<TrackId, juce::Uuid>> TimelineComponent::getSelectedMidiClip() const
 {
     return selectedMidiClip;
+}
+
+bool TimelineComponent::selectAdjacentClip(int direction)
+{
+    if (projectModel == nullptr || direction == 0)
+        return false;
+
+    struct ClipReference
+    {
+        TrackId trackId;
+        juce::Uuid clipId;
+        double startSeconds = 0.0;
+        int trackOrder = 0;
+        bool midi = false;
+    };
+
+    std::vector<ClipReference> clips;
+    auto trackOrder = 0;
+
+    for (const auto& track : projectModel->getAudioTracks())
+    {
+        for (const auto& clip : track->clips)
+            clips.push_back({ track->state.id, clip.id, clip.startTimeSeconds, trackOrder, false });
+
+        ++trackOrder;
+    }
+
+    for (const auto& track : projectModel->getMidiTracks())
+    {
+        for (const auto& clip : track->clips)
+        {
+            clips.push_back({ track->state.id,
+                              clip.id,
+                              projectModel->getTempoMap().beatsToSeconds(clip.startBeat),
+                              trackOrder,
+                              true });
+        }
+
+        ++trackOrder;
+    }
+
+    if (clips.empty())
+        return false;
+
+    std::sort(clips.begin(),
+              clips.end(),
+              [] (const ClipReference& left, const ClipReference& right)
+              {
+                  if (std::abs(left.startSeconds - right.startSeconds) > 0.000001)
+                      return left.startSeconds < right.startSeconds;
+
+                  if (left.trackOrder != right.trackOrder)
+                      return left.trackOrder < right.trackOrder;
+
+                  return left.clipId.toString() < right.clipId.toString();
+              });
+
+    auto selectedIndex = direction > 0 ? -1 : static_cast<int>(clips.size());
+
+    for (auto i = 0; i < static_cast<int>(clips.size()); ++i)
+    {
+        const auto& clip = clips[static_cast<size_t>(i)];
+
+        if (! clip.midi
+            && selectedAudioClip.has_value()
+            && selectedAudioClip->first == clip.trackId
+            && selectedAudioClip->second == clip.clipId)
+        {
+            selectedIndex = i;
+            break;
+        }
+
+        if (clip.midi
+            && selectedMidiClip.has_value()
+            && selectedMidiClip->first == clip.trackId
+            && selectedMidiClip->second == clip.clipId)
+        {
+            selectedIndex = i;
+            break;
+        }
+    }
+
+    const auto nextIndex = juce::jlimit(0,
+                                        static_cast<int>(clips.size()) - 1,
+                                        selectedIndex + (direction > 0 ? 1 : -1));
+    const auto& nextClip = clips[static_cast<size_t>(nextIndex)];
+
+    if (nextClip.midi)
+    {
+        selectedMidiClip = std::make_pair(nextClip.trackId, nextClip.clipId);
+        selectedAudioClip.reset();
+    }
+    else
+    {
+        selectedAudioClip = std::make_pair(nextClip.trackId, nextClip.clipId);
+        selectedMidiClip.reset();
+    }
+
+    repaint();
+    return true;
 }
 
 void TimelineComponent::paint(juce::Graphics& graphics)
