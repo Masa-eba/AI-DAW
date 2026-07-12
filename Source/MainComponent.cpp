@@ -358,6 +358,15 @@ MainComponent::MainComponent()
         timelineComponent.repaint();
         updateTransportDisplay();
     };
+    timelineComponent.onMidiClipTrimmed = [this](const TrackId& trackId,
+                                                 const juce::Uuid& clipId,
+                                                 double lengthBeats)
+    {
+        audioEngine.setMidiClipLength(trackId, clipId, lengthBeats);
+        updateTimelineSize();
+        timelineComponent.repaint();
+        updateTransportDisplay();
+    };
     timelineComponent.onMidiClipMovedToTrack = [this](const TrackId& sourceTrackId,
                                                       const TrackId& destinationTrackId,
                                                       const juce::Uuid& clipId,

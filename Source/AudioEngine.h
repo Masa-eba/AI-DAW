@@ -89,6 +89,7 @@ public:
                           double fadeOutSeconds);
     bool adjustAudioClipGain(const TrackId& trackId, const juce::Uuid& clipId, float delta);
     void setMidiClipStartBeat(const TrackId& trackId, const juce::Uuid& clipId, double startBeat);
+    bool setMidiClipLength(const TrackId& trackId, const juce::Uuid& clipId, double lengthBeats);
     void moveMidiClipToTrack(const TrackId& sourceTrackId,
                              const TrackId& destinationTrackId,
                              const juce::Uuid& clipId,

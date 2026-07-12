@@ -697,6 +697,27 @@ void AudioEngine::setMidiClipStartBeat(const TrackId& trackId,
             }
 }
 
+bool AudioEngine::setMidiClipLength(const TrackId& trackId,
+                                    const juce::Uuid& clipId,
+                                    double lengthBeats)
+{
+    if (! std::isfinite(lengthBeats))
+        return false;
+
+    std::scoped_lock lock(modelMutex);
+    saveUndoSnapshotNoLock();
+
+    if (auto* track = projectModel.findMidiTrack(trackId))
+        for (auto& clip : track->clips)
+            if (clip.id == clipId)
+            {
+                clip.lengthBeats = juce::jmax(0.25, lengthBeats);
+                return true;
+            }
+
+    return false;
+}
+
 void AudioEngine::moveMidiClipToTrack(const TrackId& sourceTrackId,
                                       const TrackId& destinationTrackId,
                                       const juce::Uuid& clipId,
@@ -1306,8 +1327,13 @@ void AudioEngine::renderMidiTracks(juce::AudioBuffer<float>& buffer,
                 if (event == nullptr)
                     continue;
 
+                const auto eventBeat = event->message.getTimeStamp();
+
+                if (eventBeat < 0.0 || eventBeat >= clip.lengthBeats)
+                    continue;
+
                 const auto eventSeconds = tempo.beatsToSeconds(clip.startBeat
-                                             + event->message.getTimeStamp());
+                                             + eventBeat);
                 const auto offset = static_cast<int>((eventSeconds - blockStartSeconds) * sampleRate);
 
                 if (offset >= 0 && offset < numSamples)

@@ -289,7 +289,7 @@ void TimelineComponent::paint(juce::Graphics& graphics)
         }
     }
 
-    if (draggingMidiClip)
+    if (draggingMidiClip || trimmingMidiClip)
     {
         if (const auto previewY = getMidiTrackY(dragPreviewMidiTrackId))
         {
@@ -381,19 +381,24 @@ void TimelineComponent::mouseDown(const juce::MouseEvent& event)
 
     if (auto hit = findMidiClipAt(event.position))
     {
-        draggingMidiClip = true;
+        const auto rightDistance = std::abs(event.position.x - hit->bounds.getRight());
+        trimmingMidiClip = rightDistance <= trimHandleWidth;
+        draggingMidiClip = ! trimmingMidiClip;
         draggingMidiTrackId = hit->trackId;
         draggingMidiClipId = hit->clipId;
         dragPreviewMidiTrackId = hit->trackId;
         dragGrabOffsetBeats = projectModel != nullptr
             ? projectModel->getTempoMap().secondsToBeats(xToSeconds(event.position.x)) - hit->startBeat
             : 0.0;
+        trimOriginalMidiStartBeats = hit->startBeat;
+        trimOriginalMidiLengthBeats = hit->lengthBeats;
         dragPreviewStartBeats = hit->startBeat;
         dragPreviewLengthBeats = hit->lengthBeats;
         dragPreviewMidiName = hit->name;
         selectedMidiClip = std::make_pair(hit->trackId, hit->clipId);
         selectedAudioClip.reset();
-        setMouseCursor(juce::MouseCursor::DraggingHandCursor);
+        setMouseCursor(trimmingMidiClip ? juce::MouseCursor::LeftRightResizeCursor
+                                        : juce::MouseCursor::DraggingHandCursor);
         repaint();
         return;
     }
@@ -444,6 +449,15 @@ void TimelineComponent::mouseDrag(const juce::MouseEvent& event)
             dragPreviewLengthSeconds = targetSeconds - trimOriginalStartSeconds;
         }
 
+        repaint();
+        return;
+    }
+
+    if (trimmingMidiClip && projectModel != nullptr)
+    {
+        const auto targetSeconds = snapSeconds(xToSeconds(event.position.x));
+        const auto targetBeat = projectModel->getTempoMap().secondsToBeats(targetSeconds);
+        dragPreviewLengthBeats = juce::jmax(0.25, targetBeat - trimOriginalMidiStartBeats);
         repaint();
         return;
     }
@@ -515,10 +529,19 @@ void TimelineComponent::mouseUp(const juce::MouseEvent& event)
         selectedMidiClip = std::make_pair(dragPreviewMidiTrackId, draggingMidiClipId);
     }
 
+    if (trimmingMidiClip)
+    {
+        if (onMidiClipTrimmed)
+            onMidiClipTrimmed(draggingMidiTrackId, draggingMidiClipId, dragPreviewLengthBeats);
+
+        selectedMidiClip = std::make_pair(draggingMidiTrackId, draggingMidiClipId);
+    }
+
     draggingAudioClip = false;
     trimmingAudioClip = false;
     trimmingAudioClipLeftEdge = false;
     draggingMidiClip = false;
+    trimmingMidiClip = false;
     dragGrabOffsetSeconds = 0.0;
     trimOriginalStartSeconds = 0.0;
     trimOriginalSourceOffsetSeconds = 0.0;
@@ -529,6 +552,8 @@ void TimelineComponent::mouseUp(const juce::MouseEvent& event)
     dragPreviewLengthSeconds = 0.0;
     dragPreviewName.clear();
     dragGrabOffsetBeats = 0.0;
+    trimOriginalMidiStartBeats = 0.0;
+    trimOriginalMidiLengthBeats = 0.0;
     dragPreviewStartBeats = 0.0;
     dragPreviewLengthBeats = 0.0;
     dragPreviewMidiName.clear();

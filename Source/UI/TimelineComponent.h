@@ -36,6 +36,7 @@ public:
     std::function<void(const TrackId&, const juce::Uuid&, double, double, double)> onAudioClipTrimmed;
     std::function<void(const TrackId&, const TrackId&, const juce::Uuid&, double)> onAudioClipMovedToTrack;
     std::function<void(const TrackId&, const juce::Uuid&, double)> onMidiClipMoved;
+    std::function<void(const TrackId&, const juce::Uuid&, double)> onMidiClipTrimmed;
     std::function<void(const TrackId&, const TrackId&, const juce::Uuid&, double)> onMidiClipMovedToTrack;
     std::function<void(const TrackId&, const juce::File&, double)> onAudioFileDropped;
 
@@ -96,10 +97,13 @@ private:
     double dragPreviewLengthSeconds = 0.0;
     juce::String dragPreviewName;
     bool draggingMidiClip = false;
+    bool trimmingMidiClip = false;
     TrackId draggingMidiTrackId;
     juce::Uuid draggingMidiClipId;
     TrackId dragPreviewMidiTrackId;
     double dragGrabOffsetBeats = 0.0;
+    double trimOriginalMidiStartBeats = 0.0;
+    double trimOriginalMidiLengthBeats = 0.0;
     double dragPreviewStartBeats = 0.0;
     double dragPreviewLengthBeats = 0.0;
     juce::String dragPreviewMidiName;
