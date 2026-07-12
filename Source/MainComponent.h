@@ -46,6 +46,7 @@ private:
     void goToEnd();
     void panicAllNotes();
     void renameSelectedTrack();
+    void duplicateSelectedTrack();
     void clearAllTrackMuteSolo();
     void clearAllTrackArms();
     void moveSelectedTrack(int direction);

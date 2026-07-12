@@ -89,23 +89,7 @@ MainComponent::MainComponent()
     addAndMakeVisible(renameTrackButton);
 
     duplicateTrackButton.setButtonText("Dup Track");
-    duplicateTrackButton.onClick = [this]
-    {
-        const auto selected = getSelectedTrack();
-
-        const auto duplicatedId = audioEngine.duplicateTrack(selected.id);
-
-        if (duplicatedId.isNull())
-        {
-            showErrorMessage("Duplicate failed", "The selected track could not be duplicated.");
-            return;
-        }
-
-        refreshTrackSelector();
-        selectTrackById(duplicatedId);
-        updateTimelineSize();
-        timelineComponent.repaint();
-    };
+    duplicateTrackButton.onClick = [this] { duplicateSelectedTrack(); };
     addAndMakeVisible(duplicateTrackButton);
 
     deleteTrackButton.setButtonText("Delete");
@@ -586,6 +570,14 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
     if (key.getKeyCode() == juce::KeyPress::endKey)
     {
         goToEnd();
+        return true;
+    }
+
+    if (key.getModifiers().isCommandDown()
+        && key.getModifiers().isAltDown()
+        && key.getKeyCode() == 'd')
+    {
+        duplicateSelectedTrack();
         return true;
     }
 
@@ -1289,6 +1281,23 @@ void MainComponent::renameSelectedTrack()
                                 component->timelineComponent.repaint();
                             }),
                             false);
+}
+
+void MainComponent::duplicateSelectedTrack()
+{
+    const auto selected = getSelectedTrack();
+    const auto duplicatedId = audioEngine.duplicateTrack(selected.id);
+
+    if (duplicatedId.isNull())
+    {
+        showErrorMessage("Duplicate failed", "The selected track could not be duplicated.");
+        return;
+    }
+
+    refreshTrackSelector();
+    selectTrackById(duplicatedId);
+    updateTimelineSize();
+    timelineComponent.repaint();
 }
 
 void MainComponent::clearAllTrackMuteSolo()
