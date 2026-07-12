@@ -206,6 +206,7 @@ open build/MiniDAW_artefacts/AI-DAW.app
 - `Command + Shift + R`: 選択中AudioClipのReverse切替
 - `Command + K`: 選択中MidiClipを現在のスナップグリッドでクオンタイズ
 - `Command + ↑ / ↓`: 選択中MidiClipを1オクターブ上下に移調
+- `Command + Shift + ↑ / ↓`: 選択中MidiClipを半音上下に移調
 - `Command + ] / [`：選択中MidiClipのVelocityを上下
 - `Command + Shift + H`: 選択中MidiClipのVelocityをHumanize
 - `Command + Option + H`: 選択中MidiClipのタイミングをHumanize
