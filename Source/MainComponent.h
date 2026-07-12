@@ -42,6 +42,7 @@ private:
     void undoProjectEdit();
     void redoProjectEdit();
     void newProject();
+    void goToStart();
     void panicAllNotes();
     void renameSelectedTrack();
     void clearAllTrackMuteSolo();

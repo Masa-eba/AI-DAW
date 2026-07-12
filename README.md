@@ -175,6 +175,7 @@ open build/MiniDAW_artefacts/AI-DAW.app
 ## ショートカット
 
 - `Space`: 再生 / 一時停止
+- `Home`: 再生位置を先頭へ移動
 - `Esc`: Panic / All Notes Off
 - `Command + Z`: Undo
 - `Command + Shift + Z`: Redo
