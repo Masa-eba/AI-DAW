@@ -54,6 +54,7 @@ private:
     void movePlayheadByGrid(int direction, bool byBar);
     void importAudioToSelectedTrack();
     void nudgeSelectedClip(int direction);
+    void moveSelectedClipToPlayhead();
     void adjustSelectedAudioClipGain(float delta);
     void duplicateSelectedClip();
     void duplicateSelectedClipAtPlayhead();

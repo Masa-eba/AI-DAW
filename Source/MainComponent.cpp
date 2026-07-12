@@ -576,6 +576,12 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
         return true;
     }
 
+    if (key.getModifiers().isCommandDown() && key.getKeyCode() == 'j')
+    {
+        moveSelectedClipToPlayhead();
+        return true;
+    }
+
     if (key.getModifiers().isCommandDown() && key.getKeyCode() == juce::KeyPress::upKey)
     {
         transposeSelectedMidiClip(12);
@@ -1178,6 +1184,34 @@ void MainComponent::nudgeSelectedClip(int direction)
     }
 
     showErrorMessage("No clip selected", "Select an audio or MIDI clip before nudging.");
+}
+
+void MainComponent::moveSelectedClipToPlayhead()
+{
+    if (const auto selectedAudioClip = timelineComponent.getSelectedAudioClip())
+    {
+        audioEngine.setAudioClipStartTime(selectedAudioClip->first,
+                                          selectedAudioClip->second,
+                                          audioEngine.getPosition());
+        updateTimelineSize();
+        updateTransportDisplay();
+        timelineComponent.repaint();
+        return;
+    }
+
+    if (const auto selectedMidiClip = timelineComponent.getSelectedMidiClip())
+    {
+        const auto startBeat = audioEngine.getProjectModel().getTempoMap().secondsToBeats(audioEngine.getPosition());
+        audioEngine.setMidiClipStartBeat(selectedMidiClip->first,
+                                         selectedMidiClip->second,
+                                         startBeat);
+        updateTimelineSize();
+        updateTransportDisplay();
+        timelineComponent.repaint();
+        return;
+    }
+
+    showErrorMessage("No clip selected", "Select an audio or MIDI clip before moving it.");
 }
 
 void MainComponent::importAudioToSelectedTrack()
