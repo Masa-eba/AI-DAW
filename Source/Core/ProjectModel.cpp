@@ -324,6 +324,7 @@ juce::String ProjectModel::toJsonString(const juce::File& projectDirectory) cons
             clipObject->setProperty("fadeOutSeconds", clip.fadeOutSeconds);
             clipObject->setProperty("gain", clip.gain);
             clipObject->setProperty("muted", clip.muted);
+            clipObject->setProperty("reversed", clip.reversed);
             clips.add(juce::var(clipObject.release()));
         }
         object->setProperty("clips", clips);
@@ -447,6 +448,7 @@ bool ProjectModel::loadFromJsonString(const juce::String& json, const juce::File
                         clip.fadeOutSeconds = static_cast<double>(clipItem.getProperty("fadeOutSeconds", 0.0));
                         clip.gain = static_cast<float>(static_cast<double>(clipItem.getProperty("gain", 1.0)));
                         clip.muted = static_cast<bool>(clipItem.getProperty("muted", false));
+                        clip.reversed = static_cast<bool>(clipItem.getProperty("reversed", false));
                         track->clips.push_back(clip);
                     }
                 }

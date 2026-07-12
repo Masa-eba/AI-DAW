@@ -234,6 +234,9 @@ void TimelineComponent::paint(juce::Graphics& graphics)
                     if (clip.muted)
                         clipLabel += "  Muted";
 
+                    if (clip.reversed)
+                        clipLabel += "  Reverse";
+
                     graphics.setColour(juce::Colours::white);
                     graphics.drawText(clipLabel,
                                       static_cast<int>(x) + 8,
@@ -843,8 +846,12 @@ void TimelineComponent::drawAudioClipWaveform(juce::Graphics& graphics,
         const auto clipSecondEnd = juce::jlimit(0.0,
                                                 clip.lengthSeconds,
                                                 (static_cast<double>(pixel + 1) - clipBounds.getX()) / pixelsPerSecond);
-        const auto sourceSecondStart = clip.sourceOffsetSeconds + clipSecondStart;
-        const auto sourceSecondEnd = clip.sourceOffsetSeconds + juce::jmax(clipSecondStart, clipSecondEnd);
+        const auto sourceSecondStart = clip.reversed
+            ? clip.sourceOffsetSeconds + (clip.lengthSeconds - juce::jmax(clipSecondStart, clipSecondEnd))
+            : clip.sourceOffsetSeconds + clipSecondStart;
+        const auto sourceSecondEnd = clip.reversed
+            ? clip.sourceOffsetSeconds + (clip.lengthSeconds - clipSecondStart)
+            : clip.sourceOffsetSeconds + juce::jmax(clipSecondStart, clipSecondEnd);
         const auto startSample = juce::jlimit(0,
                                               track.audioBuffer.getNumSamples(),
                                               static_cast<int>(sourceSecondStart * track.sampleRate));

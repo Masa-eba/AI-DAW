@@ -601,6 +601,14 @@ bool MainComponent::keyPressed(const juce::KeyPress& key)
 
     if (key.getModifiers().isCommandDown()
         && key.getModifiers().isShiftDown()
+        && key.getKeyCode() == 'r')
+    {
+        toggleSelectedAudioClipReverse();
+        return true;
+    }
+
+    if (key.getModifiers().isCommandDown()
+        && key.getModifiers().isShiftDown()
         && key.getKeyCode() == 'h')
     {
         humanizeSelectedMidiClipVelocity();
@@ -1381,6 +1389,25 @@ void MainComponent::normalizeSelectedAudioClip()
     if (! audioEngine.normalizeAudioClipGain(selectedAudioClip->first, selectedAudioClip->second))
     {
         showErrorMessage("Normalize failed", "The selected audio clip could not be normalized.");
+        return;
+    }
+
+    timelineComponent.repaint();
+}
+
+void MainComponent::toggleSelectedAudioClipReverse()
+{
+    const auto selectedAudioClip = timelineComponent.getSelectedAudioClip();
+
+    if (! selectedAudioClip.has_value())
+    {
+        showErrorMessage("No audio clip selected", "Select an audio clip before reversing.");
+        return;
+    }
+
+    if (! audioEngine.toggleAudioClipReversed(selectedAudioClip->first, selectedAudioClip->second))
+    {
+        showErrorMessage("Reverse failed", "The selected audio clip reverse state could not be changed.");
         return;
     }
 

@@ -58,6 +58,7 @@ private:
     void moveSelectedClipToPlayhead();
     void adjustSelectedAudioClipGain(float delta);
     void normalizeSelectedAudioClip();
+    void toggleSelectedAudioClipReverse();
     void duplicateSelectedClip();
     void duplicateSelectedClipAtPlayhead();
     void toggleSelectedClipMute();

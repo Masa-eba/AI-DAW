@@ -779,6 +779,22 @@ bool AudioEngine::toggleAudioClipMuted(const TrackId& trackId, const juce::Uuid&
     return false;
 }
 
+bool AudioEngine::toggleAudioClipReversed(const TrackId& trackId, const juce::Uuid& clipId)
+{
+    std::scoped_lock lock(modelMutex);
+    saveUndoSnapshotNoLock();
+
+    if (auto* track = projectModel.findAudioTrack(trackId))
+        for (auto& clip : track->clips)
+            if (clip.id == clipId)
+            {
+                clip.reversed = ! clip.reversed;
+                return true;
+            }
+
+    return false;
+}
+
 void AudioEngine::setMidiClipStartBeat(const TrackId& trackId,
                                        const juce::Uuid& clipId,
                                        double startBeat)
@@ -1508,11 +1524,14 @@ void AudioEngine::renderAudioTracks(juce::AudioBuffer<float>& buffer,
             {
                 const auto timeSeconds = blockStartSeconds + static_cast<double>(sample) / outputSampleRate;
                 const auto clipTime = timeSeconds - clip.startTimeSeconds;
-                const auto sourceTime = clipTime + clip.sourceOffsetSeconds;
 
                 if (clipTime < 0.0 || clipTime >= clip.lengthSeconds)
                     continue;
 
+                const auto sourceTime = clip.reversed
+                    ? clip.sourceOffsetSeconds
+                        + juce::jmax(0.0, clip.lengthSeconds - clipTime - (1.0 / track.sampleRate))
+                    : clipTime + clip.sourceOffsetSeconds;
                 const auto sourceIndex = static_cast<int>(sourceTime * track.sampleRate);
 
                 if (sourceIndex < 0 || sourceIndex >= track.audioBuffer.getNumSamples())
