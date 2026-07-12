@@ -108,6 +108,7 @@ private:
     juce::Slider zoomSlider;
     juce::Slider masterVolumeSlider;
     juce::Slider trackVolumeSlider;
+    juce::Slider trackPanSlider;
     juce::ComboBox trackSelector;
     juce::ComboBox midiInputSelector;
     std::unique_ptr<juce::FileChooser> fileChooser;

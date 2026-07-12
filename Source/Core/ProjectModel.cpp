@@ -140,6 +140,7 @@ juce::String ProjectModel::toJsonString() const
         object->setProperty("id", track->state.id.toString());
         object->setProperty("name", track->state.name);
         object->setProperty("gain", track->state.gain);
+        object->setProperty("pan", track->state.pan);
         object->setProperty("muted", track->state.muted);
         object->setProperty("solo", track->state.solo);
         object->setProperty("armed", track->state.armed);
@@ -171,6 +172,7 @@ juce::String ProjectModel::toJsonString() const
         object->setProperty("id", track->state.id.toString());
         object->setProperty("name", track->state.name);
         object->setProperty("gain", track->state.gain);
+        object->setProperty("pan", track->state.pan);
         object->setProperty("muted", track->state.muted);
         object->setProperty("solo", track->state.solo);
         object->setProperty("armed", track->state.armed);
@@ -234,6 +236,7 @@ bool ProjectModel::loadFromJsonString(const juce::String& json)
                 auto track = std::make_unique<AudioTrack>(item.getProperty("name", "Audio"));
                 track->state.id = TrackId(item.getProperty("id", TrackId().toString()).toString());
                 track->state.gain = static_cast<float>(static_cast<double>(item.getProperty("gain", 0.8)));
+                track->state.pan = static_cast<float>(static_cast<double>(item.getProperty("pan", 0.0)));
                 track->state.muted = static_cast<bool>(item.getProperty("muted", false));
                 track->state.solo = static_cast<bool>(item.getProperty("solo", false));
                 track->state.armed = static_cast<bool>(item.getProperty("armed", false));
@@ -270,6 +273,7 @@ bool ProjectModel::loadFromJsonString(const juce::String& json)
                 auto track = std::make_unique<MidiTrack>(item.getProperty("name", "MIDI"));
                 track->state.id = TrackId(item.getProperty("id", TrackId().toString()).toString());
                 track->state.gain = static_cast<float>(static_cast<double>(item.getProperty("gain", 0.8)));
+                track->state.pan = static_cast<float>(static_cast<double>(item.getProperty("pan", 0.0)));
                 track->state.muted = static_cast<bool>(item.getProperty("muted", false));
                 track->state.solo = static_cast<bool>(item.getProperty("solo", false));
                 track->state.armed = static_cast<bool>(item.getProperty("armed", false));

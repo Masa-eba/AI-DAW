@@ -291,6 +291,16 @@ void AudioEngine::setTrackGain(const TrackId& trackId, float gain)
         midiTrack->state.gain = juce::jlimit(0.0f, 1.0f, gain);
 }
 
+void AudioEngine::setTrackPan(const TrackId& trackId, float pan)
+{
+    std::scoped_lock lock(modelMutex);
+
+    if (auto* track = projectModel.findAudioTrack(trackId))
+        track->state.pan = juce::jlimit(-1.0f, 1.0f, pan);
+    else if (auto* midiTrack = projectModel.findMidiTrack(trackId))
+        midiTrack->state.pan = juce::jlimit(-1.0f, 1.0f, pan);
+}
+
 bool AudioEngine::renameTrack(const TrackId& trackId, const juce::String& newName)
 {
     auto cleanName = newName.trim();
@@ -1099,14 +1109,19 @@ void AudioEngine::renderAudioTracks(juce::AudioBuffer<float>& buffer,
                     clipGain *= static_cast<float>((clip.lengthSeconds - sourceTime) / clip.fadeOutSeconds);
 
                 clipGain = juce::jlimit(0.0f, 1.0f, clipGain);
+                const auto pan = juce::jlimit(-1.0f, 1.0f, track.state.pan);
+                const auto leftPanGain = pan > 0.0f ? 1.0f - pan : 1.0f;
+                const auto rightPanGain = pan < 0.0f ? 1.0f + pan : 1.0f;
 
                 for (auto channel = 0; channel < buffer.getNumChannels(); ++channel)
                 {
                     const auto sourceChannel = juce::jmin(channel, track.audioBuffer.getNumChannels() - 1);
+                    const auto panGain = channel == 0 ? leftPanGain : (channel == 1 ? rightPanGain : 1.0f);
                     buffer.addSample(channel,
                                      sample,
                                      track.audioBuffer.getSample(sourceChannel, sourceIndex)
-                                         * clipGain);
+                                         * clipGain
+                                         * panGain);
                 }
             }
         }
@@ -1144,7 +1159,16 @@ void AudioEngine::renderMidiTracks(juce::AudioBuffer<float>& buffer,
                 const auto offset = static_cast<int>((eventSeconds - blockStartSeconds) * sampleRate);
 
                 if (offset >= 0 && offset < numSamples)
-                    midiMessages.addEvent(event->message, offset);
+                {
+                    auto message = event->message;
+
+                    if (message.isNoteOn())
+                        message.setVelocity(juce::jlimit(0.0f,
+                                                         1.0f,
+                                                         message.getFloatVelocity() * track.state.gain));
+
+                    midiMessages.addEvent(message, offset);
+                }
             }
         }
     }

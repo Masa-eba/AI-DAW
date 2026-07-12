@@ -59,6 +59,7 @@ public:
     const juce::File& getCurrentFile() const;
 
     void setTrackGain(const TrackId& trackId, float gain);
+    void setTrackPan(const TrackId& trackId, float pan);
     bool renameTrack(const TrackId& trackId, const juce::String& newName);
     void setTrackMuted(const TrackId& trackId, bool muted);
     void setTrackSolo(const TrackId& trackId, bool solo);

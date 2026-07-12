@@ -254,6 +254,17 @@ MainComponent::MainComponent()
     };
     addAndMakeVisible(trackVolumeSlider);
 
+    trackPanSlider.setSliderStyle(juce::Slider::LinearHorizontal);
+    trackPanSlider.setTextBoxStyle(juce::Slider::TextBoxRight, false, 56, 22);
+    trackPanSlider.setRange(-1.0, 1.0, 0.01);
+    trackPanSlider.setValue(0.0, juce::dontSendNotification);
+    trackPanSlider.onValueChange = [this]
+    {
+        const auto selected = getSelectedTrack();
+        audioEngine.setTrackPan(selected.id, static_cast<float>(trackPanSlider.getValue()));
+    };
+    addAndMakeVisible(trackPanSlider);
+
     trackSelector.onChange = [this] { updateSelectedTrackControls(); };
     addAndMakeVisible(trackSelector);
 
@@ -420,6 +431,8 @@ void MainComponent::resized()
     soloButton.setBounds(trackBar.removeFromLeft(36).reduced(0, 5));
     trackBar.removeFromLeft(8);
     trackVolumeSlider.setBounds(trackBar.removeFromLeft(190).reduced(0, 5));
+    trackBar.removeFromLeft(8);
+    trackPanSlider.setBounds(trackBar.removeFromLeft(170).reduced(0, 5));
 
     auto clipBar = area.removeFromTop(44);
     duplicateClipButton.setBounds(clipBar.removeFromLeft(118).reduced(0, 5));
@@ -649,6 +662,7 @@ void MainComponent::updateSelectedTrackControls()
         muteButton.setToggleState(track->state.muted, juce::dontSendNotification);
         soloButton.setToggleState(track->state.solo, juce::dontSendNotification);
         trackVolumeSlider.setValue(track->state.gain, juce::dontSendNotification);
+        trackPanSlider.setValue(track->state.pan, juce::dontSendNotification);
         importAudioButton.setEnabled(true);
         return;
     }
@@ -659,6 +673,7 @@ void MainComponent::updateSelectedTrackControls()
         muteButton.setToggleState(track->state.muted, juce::dontSendNotification);
         soloButton.setToggleState(track->state.solo, juce::dontSendNotification);
         trackVolumeSlider.setValue(track->state.gain, juce::dontSendNotification);
+        trackPanSlider.setValue(track->state.pan, juce::dontSendNotification);
         importAudioButton.setEnabled(false);
     }
 }
